@@ -2,16 +2,12 @@ import os
 import shutil
 import random
 
-# Update these to match your current layout.
-# Your source folders are inside the repo's `data/` folder (e.g. data/normal).
-# We write the split into a separate folder `data_prepared/` to avoid copying
-# files into the same tree as the sources (which would cause recursion/dup).
+
 SRC_NORMAL_DIR = os.path.join(os.getcwd(), "data", "normal")
 SRC_BENIGN_DIR = os.path.join(os.getcwd(), "data", "benign")
 SRC_MALIGNANT_DIR = os.path.join(os.getcwd(), "data", "malignant")
 
-# Output root for the prepared (train/val/test) split. Use a different
-# folder than the source `data/` to avoid accidentally copying into sources.
+
 OUT_ROOT = os.path.join(os.getcwd(), "data_prepared")
 SPLITS = {"train": 0.7, "val": 0.15, "test": 0.15}
 CLASSES = {"normal": SRC_NORMAL_DIR, "benign": SRC_BENIGN_DIR, "malignant": SRC_MALIGNANT_DIR}
@@ -61,7 +57,7 @@ def make_split():
                     shutil.copy2(src_path, dst)
     print("Source counts per class:", summary)
     print("Total images found:", total_before)
-    # print resulting counts
+    
     total_after = 0
     res_summary = {}
     for subset in ("train", "val", "test"):

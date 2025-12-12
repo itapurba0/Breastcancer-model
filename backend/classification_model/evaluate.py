@@ -36,9 +36,9 @@ def build_dataset():
     return ds
 
 def evaluate():
-    # prefer a non-empty model file; fall back to an alternate model if needed
+   
     chosen = None
-    # prefer non-empty .keras files, fallback to .h5 variants
+   
     def good(p):
         return os.path.exists(p) and os.path.getsize(p) > 100
     if good(MODEL_PATH):
@@ -75,7 +75,7 @@ def evaluate():
         probs.extend(preds.tolist())
 
     print('Total samples evaluated:', len(y_true))
-    # map to names if mapping available
+   
     if inv_map:
         target_names = [inv_map[i] for i in sorted(inv_map.keys())]
     else:
