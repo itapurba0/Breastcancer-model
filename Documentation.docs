@@ -1,0 +1,142 @@
+# Breast Cancer Prediction & Medical Chatbot — Project Documentation
+
+Purpose: a single reference for developers and CI systems. This file covers architecture, dev flows, model details, chatbot design, frontend behavior, testing, and deployment notes.
+
+## Table of Contents
+
+1. Preface & Executive summary
+2. Introduction
+  - Background
+  - Motivation & Scope
+3. Literature review (concise)
+4. System requirements (Software, Hardware, Compliance)
+5. High-level architecture & data flow
+  - Frontend / Backend / Model artifacts / Proxy
+  - Predict request sequence
+6. Model discovery & initialization (`backend/model_utils.py`)
+7. Preprocessing & inference contract (CRITICAL)
+8. Training & evaluation guidance
+9. Hospital recommendation module (operational mapping)
+10. Prediction API — endpoints & examples (`/predict`, `/chat`)
+11. Frontend behavior, UX & accessibility
+12. Chatbot & RAG design (ingestion, vector store, retriever, LLM)
+13. Explainability & visual overlays (Grad-CAM)
+14. Testing strategy, CI and smoke tests
+15. Performance, benchmarks & optimizations
+16. Deployment, monitoring & operational guidance
+17. Security, privacy & governance (PHI, auth)
+18. Limitations, future work & conclusion
+19. Appendix (commands, snippets, curl examples)
+
+Note: For the full expanded document (7k–8k words) see `DOCUMENTATION.md` at the repository root. Use this TOC to find sections quickly or to reference the single-file long-form documentation.
+
+## Image & Diagram placement guidance
+
+Where to place images and diagrams
+
+- Place final diagram and image assets under a new folder `docs/images/` at the repository root. This keeps visual assets separate from source code and makes them easy to reference when generating PDF or static site output.
+- Suggested filename convention: `section_shortname_description.ext` (e.g., `01_architecture_overview.png`, `06_training_pipeline.svg`, `12_rag_architecture.svg`, `13_gradcam_examples.png`).
+
+Which sections should include images / suggested placeholders
+
+- Section 4 / System requirements: small environment diagram (filename: `04_environment_diagram.png`, suggested size 800×400 px).
+- Section 5 / High-level architecture: `01_architecture_overview.png` (wide diagram, 1200×600 px) — shows frontend, backend, model store, optional proxy, and data flow arrows.
+- Section 6 / Predict request sequence: `05_predict_sequence.png` (vertical sequence diagram, 800×1000 px) or a dataflow PNG.
+- Section 7 / Model discovery & init: `06_model_discovery.png` (small diagram showing model lookup and model candidates list, 800×400 px).
+- Section 11 / Chatbot & RAG: `12_rag_chat_architecture.png` (wide, 1200×600 px) — ingest → vectorstore → retriever → LLM → response flow.
+- Section 13 / Explainability: `13_grad_cam_examples.png` (two-up images showing original and heatmap overlay, 800×800 px).
+- Appendix figures: `appendix_dataset_summary.csv` (CSV table) and `appendix_metrics_history.csv` (CSV table) — place under `docs/images/` as CSV files or under `docs/tables/` if you prefer structured data.
+
+Image format & resolution guidance
+
+- Prefer vector formats (SVG) for diagrams when possible — smaller file size and scalable for PDF output.
+- Use PNG for raster images like Grad-CAM overlays. For web previews 800–1200 px widths are sufficient; for print/PDF use 150–300 DPI accordingly.
+
+How to reference images in `DOCUMENTATION.md`
+
+Use relative links from the repo root, for example:
+
+```
+![Architecture overview](docs/images/01_architecture_overview.png)
+```
+
+Or, in a generated site toolchain, place images into the static folder expected by the renderer (for example, `docs/images/` is compatible with many static site generators).
+
+Optional: automated placeholders
+
+If you want, I can create lightweight SVG placeholder files under `docs/images/` (blank diagrams with labels) so the final PDF layout is preserved until you replace them with production graphics. Tell me if you'd like me to create these placeholder SVGs and I will add them.
+
+## 1. Executive summary
+- This repository contains a FastAPI backend (image classification + chatbot endpoints) and a React frontend. The ML model is a Keras/TensorFlow classifier under `backend/classification_model/` trained to label breast tissue images as benign/malignant/normal.
+
+## 2. High-level architecture
+- Frontend: React components (upload, preview, chat) that POST images to the backend `POST /predict` and interact with `POST /chat` for conversational flows.
+- Backend: FastAPI exposing `/predict` and `/chat`. Model loading and inference utilities live in `backend/model_utils.py`. Chat logic resides in `backend/chat_interface.py`.
+- Model artifacts: `backend/classification_model/model_best.keras` and `model_finetuned.keras`. `class_indices.json` maps output indices to human labels.
+
+## 3. Backend details
+- Main file: `backend/api.py` — registers routes, CORS, and initializes model via `model_utils.init_model()` using a lifespan context manager.
+- Model utils: `backend/model_utils.py` handles safe TensorFlow import, model discovery, `preprocess_image_bytes` (PIL-based resize to IMG_SIZE = (224,224) — do NOT divide by 255 unless retraining), and both local and proxy prediction flows.
+- Prediction endpoint: `POST /predict` accepts a file field `file`. If a local model is available it's used; otherwise the request may be proxied to a MODEL_PROXY_URL when configured.
+
+## 4. Prediction model
+- Data preprocessing: convert to RGB, resize to (224,224), preserve pixel ranges (no normalization by 255 in inference unless the model expects it). These rules are enforced throughout the repo and must not be changed lightly.
+- Model files must match names in `MODEL_CANDIDATES` in `model_utils.py` or be added there.
+
+## 5. Chatbot system
+- Chat logic lives in `backend/chat_interface.py`. The architecture is designed for a RAG-style system (ingest docs → vector store → retriever → LLM). The current repo provides a shell for this; real LLM/RAG integrations require adding vectorstore and LLM keys/config.
+
+## 6. Frontend
+- Key components: `frontend/components/prediction.tsx` (upload/preview/submit/reset), `frontend/components/previewCard.tsx` (preview display).
+- Preview lifecycle: components create object URLs with `URL.createObjectURL(file)` and MUST revoke them with `URL.revokeObjectURL(url)` to avoid memory leaks.
+- Dev endpoint: frontend expects backend at `http://localhost:8001/predict` by default. Change via env when deploying.
+
+## 7. Developer workflows
+- Local backend: from repo root
+
+  python -m venv .venv
+  source .venv/bin/activate
+  pip install -U pip
+  pip install -r backend/classification_model/requirements.txt # if present
+  pip install pytest httpx uvicorn
+
+- Run tests (from repo root):
+
+  pytest -q backend/tests/test_predict.py
+
+- Run backend server (dev):
+
+  cd backend
+  uvicorn api:app --reload --port 8001
+
+- Frontend dev: (from `frontend/`)
+  npm install
+  npm run dev
+
+## 8. Tests
+- A light pytest smoke test exists at `backend/tests/test_predict.py` which posts a small fake image and monkeypatches network/model calls to return a deterministic response. This test does not require GPU.
+
+## 9. CI / GitHub Actions
+- A workflow is included (see `.github/workflows/ci.yml`) to run pytest for Python 3.10 and 3.11 on push and PR. The workflow installs dependencies and runs `pytest tests/test_predict.py` from the `backend` directory.
+
+## 10. Deployment notes
+- Environment variables of interest:
+  - MODEL_PROXY_URL — remote inference proxy (optional)
+  - TF_CPP_MIN_LOG_LEVEL — set to suppress TensorFlow logs in production
+
+- Docker/GPU: when deploying with GPU support, use a TF-compatible base image and mount model artifacts into the container.
+
+## 11. Security & PHI
+- Treat user images as PHI. Do not log raw images. If storing logs, redact or hash identifiers.
+
+## 12. Appendix
+- Quick curl example (predict):
+
+  curl -X POST "http://localhost:8001/predict" -F "file=@/path/to/image.jpg"
+
+- Example response:
+
+  { "predicted": "malignant", "confidence": 0.92 }
+
+---
+If you'd like, I can expand this into a longer, section-by-section `DOCUMENTATION.md` (with diagrams placeholders and more code snippets) — confirm filename preference and I will commit that next.
