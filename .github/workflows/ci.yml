@@ -29,7 +29,7 @@ jobs:
           if [ -f backend/classification_model/requirements.txt ]; then python -m pip install -r backend/classification_model/requirements.txt; fi
           if [ -f backend/requirements.txt ]; then python -m pip install -r backend/requirements.txt; fi
           # Ensure FastAPI/Uvicorn and test dependencies are available in CI
-          python -m pip install fastapi uvicorn pytest httpx
+          python -m pip install fastapi uvicorn pytest httpx python-multipart
 
       - name: Run backend smoke tests
         working-directory: ./backend
