@@ -1,0 +1,16 @@
+tensorflow
+numpy
+opencv-python
+scikit-learn
+matplotlib
+Pillow
+h5py
+keras
+python-multipart
+fastapi
+uvicorn
+pydantic
+psycopg2-binary
+pytest
+pytest-asyncio
+httpx

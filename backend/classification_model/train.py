@@ -1,7 +1,7 @@
 
 import os
 import json
-import tensorflow as tf
+import tensorflow as tf # pyright: ignore[reportMissingImports]
 from tensorflow.keras import layers, Model # pyright: ignore[reportMissingImports]
 from tensorflow.keras.callbacks import ModelCheckpoint, EarlyStopping, ReduceLROnPlateau # pyright: ignore[reportMissingImports]
 
