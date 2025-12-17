@@ -1,16 +1,4 @@
-"""Simple FastAPI server in the `backend` folder exposing a /predict endpoint.
 
-This app looks for a model inside `backend/classification_model` (prefers
-`model_best.keras` or `model_finetuned.keras`) and uses
-`class_indices.json` for label mapping.
-
-Run from the `backend` folder:
-  uvicorn api:app --host 0.0.0.0 --port 8001
-
-Notes:
- - Uses the same preprocessing as the training scripts (no /255 scaling).
- - CORS allows local React dev origins by default.
-"""
 from fastapi import FastAPI, File, UploadFile, HTTPException # type: ignore
 from fastapi.middleware.cors import CORSMiddleware # type: ignore
 import os
@@ -22,7 +10,7 @@ from contextlib import asynccontextmanager
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # Initialize model at application startup (kept out of top-level imports to avoid TF overhead)
+ 
     global MODEL, IDX_TO_NAME
     MODEL, IDX_TO_NAME = model_utils.init_model()
     if MODEL is None:
@@ -30,8 +18,7 @@ async def lifespan(app: FastAPI):
     else:
         print("Model loaded successfully at startup.")
     yield
-    # optional: perform any cleanup here on shutdown
-
+   
 
 app = FastAPI(title="Backend Classifier API", lifespan=lifespan)
 app.add_middleware(
@@ -42,13 +29,11 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# module-level paths / placeholders
 BASE_DIR = os.path.dirname(__file__)
 MODEL = None
 IDX_TO_NAME: Dict[int, str] = {}
 
 
-# NOTE: startup behavior is handled by the `lifespan` context manager above.
 
 
 @app.get("/")
@@ -64,7 +49,7 @@ async def predict(file: UploadFile = File(...)):
 
     data = await file.read()
 
-    # if model available locally, run prediction; otherwise proxy to MODEL_PROXY_URL
+    
     if model_utils.tf is not None and MODEL is not None:
         try:
             x = model_utils.preprocess_image_bytes(data)
@@ -78,7 +63,7 @@ async def predict(file: UploadFile = File(...)):
             raise HTTPException(status_code=500, detail=f"Local prediction failed: {e}")
 
     # proxy path
-    proxy_url = os.environ.get("MODEL_PROXY_URL", "http://127.0.0.1:8000/predict")
+    proxy_url = os.environ.get("MODEL_PROXY_URL", "http://127.0.0.1:8001/predict")
     try:
         resp = model_utils.proxy_predict(data, getattr(file, "filename", "upload"), file.content_type or "application/octet-stream", proxy_url)
         return resp
