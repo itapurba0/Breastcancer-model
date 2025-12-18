@@ -47,7 +47,7 @@ const Classification = () => {
             <ol className="space-y-3">
               <li className="flex items-start gap-3">
                 <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground text-xs font-bold">1</span>
-                <p className="text-sm text-muted-foreground">Upload a Ultrasound image (JPG, PNG, or DICOM format)</p>
+                <p className="text-sm text-muted-foreground">Upload a Ultrasound image (JPG, PNGformat)</p>
               </li>
               <li className="flex items-start gap-3">
                 <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground text-xs font-bold">2</span>
