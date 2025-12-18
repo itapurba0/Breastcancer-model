@@ -1,9 +1,4 @@
-"""Chat interface helpers.
 
-This module exposes a small wrapper that `api.py` can call. It keeps the API
-file focused and lets you implement a full chatbot separately under
-`backend/chatbot/`.
-"""
 import os
 from datetime import datetime
 from typing import Optional

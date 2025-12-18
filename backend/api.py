@@ -58,7 +58,13 @@ async def predict(file: UploadFile = File(...)):
             probs = res["probs"]
             pred_name = IDX_TO_NAME.get(pred_idx, str(pred_idx))
             name_prob = {IDX_TO_NAME.get(i, str(i)): float(probs[i]) for i in range(len(probs))}
-            return {"predicted": pred_name, "predicted_idx": pred_idx, "probabilities": name_prob}
+            confidence = float(probs[pred_idx]) if probs else None
+            return {
+                "predicted": pred_name,
+                "predicted_idx": pred_idx,
+                "confidence": confidence,
+                "probabilities": name_prob,
+            }
         except Exception as e:
             raise HTTPException(status_code=500, detail=f"Local prediction failed: {e}")
 

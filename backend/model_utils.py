@@ -1,17 +1,10 @@
-"""Model utilities: discovery, loading, preprocessing and proxy predict.
-
-This module centralizes model-related logic so `api.py` stays small.
-"""
 import os
 import io
 import json
 import logging
 
-# Prevent TensorFlow from printing CUDA / GPU discovery warnings when no GPU is available
-# - If you DO want GPU support, remove or comment the two lines below and ensure CUDA
-#   drivers and libraries compatible with your TensorFlow version are installed.
-# - These environment variables must be set before importing tensorflow.
-os.environ.setdefault("TF_CPP_MIN_LOG_LEVEL", "2")  # 0=DEBUG,1=INFO,2=WARNING,3=ERROR
+
+os.environ.setdefault("TF_CPP_MIN_LOG_LEVEL", "2")  # suppress TF info/warnings
 os.environ.setdefault("CUDA_VISIBLE_DEVICES", "")  # hide GPUs from TF so it won't try to load CUDA libs
 logging.getLogger("tensorflow").setLevel(logging.ERROR)
 from typing import Tuple, Dict, Optional
@@ -22,13 +15,9 @@ from PIL import Image
 SUPPRESS_CUDA_WARNINGS = True
 
 def _import_tensorflow_safely():
-    """Import tensorflow while suppressing low-level stderr output (CUDA errors).
-
-    This avoids noisy C/C++ messages about missing CUDA libraries when you do not
-    have GPU drivers installed. If TensorFlow isn't available, returns None.
-    """
+    
     try:
-        # Temporarily redirect C-level stderr (fd 2) to /dev/null while importing
+       
         devnull = os.open(os.devnull, os.O_RDWR)
         old_stderr_fd = os.dup(2)
         os.dup2(devnull, 2)
@@ -79,7 +68,7 @@ def load_class_indices() -> Dict[int, str]:
 
 
 def init_model() -> Tuple[Optional[object], Dict[int, str]]:
-    """Try to load a TF model if available. Returns (model_or_None, idx_to_name dict)."""
+   
     model_path = find_model_in_classification_dir()
     if model_path is None or tf is None:
         return None, {}
@@ -100,6 +89,7 @@ def preprocess_image_bytes(data: bytes):
 
 def predict_with_model(model, x) -> dict:
     preds = model.predict(x)
+    print(preds)
     probs = preds[0].tolist()
     pred_idx = int(np.argmax(probs))
     return {"pred_idx": pred_idx, "probs": probs}

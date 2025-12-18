@@ -1,6 +1,9 @@
-./frontend
+
 
 /node_modules
 /build
 /dist
 ./github/copilot-instructions.md
+*.doc
+high_confidence_filtered.json
+high_confidence.json
