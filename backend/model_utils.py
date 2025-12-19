@@ -43,6 +43,7 @@ MODEL_DIR = os.path.join(BASE_DIR, "classification_model")
 IMG_SIZE = (224, 224)
 
 MODEL_CANDIDATES = [
+    "breast_classification_model.keras",
     "model_best.keras",
     "model_finetuned.keras",
     "model_best.h5",
