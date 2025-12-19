@@ -4,4 +4,7 @@ venv/
 env/
 data/
 data_prepared
+final_data/
 tests/__pycache__/
+breast_classification_model.keras
+model_v2.keras
