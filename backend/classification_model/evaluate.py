@@ -8,8 +8,8 @@ import tensorflow as tf
 from tensorflow.keras.preprocessing import image
 from sklearn.metrics import classification_report, confusion_matrix
 
-DATA_DIR = os.path.join(os.getcwd(), "data_prepared", "val")
-MODEL_PATH = os.path.join(os.getcwd(), "model_best.keras")
+DATA_DIR = os.path.join(os.getcwd(), "new_data", "val")
+MODEL_PATH = os.path.join(os.getcwd(), "model_v3.keras")
 MODEL_PATH_FALLBACK = os.path.join(os.getcwd(), "model_best.h5")
 ALT_MODEL_PATH = os.path.join(os.getcwd(), "model_finetuned.keras")
 ALT_MODEL_PATH_FALLBACK = os.path.join(os.getcwd(), "model_finetuned.h5")

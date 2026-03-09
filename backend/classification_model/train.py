@@ -6,15 +6,15 @@ from tensorflow.keras import layers, Model # pyright: ignore[reportMissingImport
 from tensorflow.keras.callbacks import ModelCheckpoint, EarlyStopping, ReduceLROnPlateau # pyright: ignore[reportMissingImports]
 
 
-DATA_DIR = os.path.join(os.getcwd(), "data_prepared")
+DATA_DIR = os.path.join(os.getcwd(), "final_data")
 BATCH_SIZE = 16
 IMG_SIZE = (224, 224)
-EPOCHS = 20
+EPOCHS = 50
 NUM_CLASSES = 3
-OUT_MODEL = "model_best.keras"
+OUT_MODEL = "model_finetuned.keras"
 OUT_MODEL_FALLBACK = "model_best.h5"
 CLASS_JSON = "class_indices.json"
-LEARNING_RATE = 1e-4
+LEARNING_RATE = 0.0001
 
 
 def get_datasets():

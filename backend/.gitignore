@@ -8,3 +8,5 @@ final_data/
 tests/__pycache__/
 breast_classification_model.keras
 model_v2.keras
+new_data/
+.pytest_cache/

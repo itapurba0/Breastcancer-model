@@ -43,6 +43,7 @@ MODEL_DIR = os.path.join(BASE_DIR, "classification_model")
 IMG_SIZE = (224, 224)
 
 MODEL_CANDIDATES = [
+    "model_v3.keras",
     "breast_classification_model.keras",
     "model_best.keras",
     "model_finetuned.keras",
@@ -54,7 +55,6 @@ def find_model_in_classification_dir() -> Optional[str]:
     for name in MODEL_CANDIDATES:
         p = os.path.join(MODEL_DIR, name)
         if os.path.exists(p) and os.path.getsize(p) > 0:
-            print(f"Found model file: {p}")
             return p
     return None
 
@@ -90,7 +90,6 @@ def preprocess_image_bytes(data: bytes):
 
 def predict_with_model(model, x) -> dict:
     preds = model.predict(x)
-    print(preds)
     probs = preds[0].tolist()
     pred_idx = int(np.argmax(probs))
     return {"pred_idx": pred_idx, "probs": probs}

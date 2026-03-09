@@ -217,9 +217,9 @@ const ImageUploader = () => {
               const isMalignant = status.includes("malig");
 
               const circleClass = isBenign
-                ? "bg-success-light"
+                ? "bg-muted"
                 : isNormal
-                  ? "bg-muted"
+                  ? "bg-success-light"
                   : "bg-medical-coral-light";
               const icon = isMalignant ? (
                 <AlertCircle className="h-6 w-6 text-medical-coral" />
@@ -228,9 +228,9 @@ const ImageUploader = () => {
               );
 
               const badgeClass = isBenign
-                ? "bg-success-light text-success"
+                ? "bg-muted text-foreground"
                 : isNormal
-                  ? "bg-muted text-foreground"
+                  ? "bg-success-light text-success"
                   : "bg-medical-coral-light text-medical-coral";
 
               return (

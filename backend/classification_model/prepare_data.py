@@ -8,8 +8,8 @@ SRC_BENIGN_DIR = os.path.join(os.getcwd(), "data", "benign")
 SRC_MALIGNANT_DIR = os.path.join(os.getcwd(), "data", "malignant")
 
 
-OUT_ROOT = os.path.join(os.getcwd(), "data_prepared")
-SPLITS = {"train": 0.7, "val": 0.15, "test": 0.15}
+OUT_ROOT = os.path.join(os.getcwd(), "new_data")
+SPLITS = {"train": 0.8, "val": 0.2}
 CLASSES = {"normal": SRC_NORMAL_DIR, "benign": SRC_BENIGN_DIR, "malignant": SRC_MALIGNANT_DIR}
 RANDOM_SEED = 42
 EXTS = {".png", ".jpg", ".jpeg"}
@@ -20,7 +20,10 @@ def gather_files_recursive(src):
         return items
     for root, _, files in os.walk(src):
         for fn in files:
-            if os.path.splitext(fn.lower())[1] in EXTS:
+            fn_l = fn.lower()
+            if fn_l.endswith(("_mask.png", "_mask_1.png")):
+                continue
+            if os.path.splitext(fn_l)[1] in EXTS:
                 items.append(os.path.join(root, fn))
     return items
 
