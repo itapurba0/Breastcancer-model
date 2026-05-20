@@ -9,13 +9,13 @@ export default defineConfig(({ mode }) => ({
     port: 3000,
     proxy: {
       '/chat': {
-        target: 'http://localhost:8001',
+        target: 'http://localhost:8000',
         changeOrigin: true,
         secure: false,
       },
 
       '/predict': {
-        target: 'http://localhost:8001',
+        target: 'http://localhost:8000',
         changeOrigin: true,
         secure: false,
       },
