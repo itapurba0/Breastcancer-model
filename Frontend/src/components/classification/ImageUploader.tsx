@@ -1,5 +1,5 @@
 import { useState, useCallback } from "react";
-import { Upload, X, Image as ImageIcon, Loader2, AlertCircle, CheckCircle, Microscope } from "lucide-react";
+import { Upload, X, Image as ImageIcon, Loader2, AlertCircle, CheckCircle, Microscope, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
@@ -7,6 +7,18 @@ interface ClassificationResult {
   prediction: string;
   confidence: number;
   details: string;
+  gradcam?: {
+    available: boolean;
+    overlay_base64?: string;
+    layer_name?: string;
+    reason?: string;
+  };
+  triage?: {
+    tier: string;
+    recommendation: string;
+    rationale: string;
+    confidence_score: number;
+  };
 }
 
 const ImageUploader = () => {
@@ -93,6 +105,8 @@ const ImageUploader = () => {
         prediction: json.predicted ?? json.prediction ?? json.label ?? "Unknown",
         confidence: normalizedConfidence,
         details: json.details ?? JSON.stringify(json),
+        gradcam: json.gradcam,
+        triage: json.triage,
       });
     } catch (err) {
       setResult({
@@ -257,13 +271,69 @@ const ImageUploader = () => {
                         {result.confidence}% Confidence
                       </span>
                     </div>
-                    {/* <p className="text-sm text-muted-foreground leading-relaxed">
-                      {result.details}
-                    </p> */}
+                    {result.triage && (
+                      <div className="mb-3 space-y-2">
+                        <span
+                          className={cn(
+                            "inline-block px-3 py-1 rounded-full text-xs font-semibold",
+                            result.triage.tier === "high concern"
+                              ? "bg-red-100 text-red-700"
+                              : result.triage.tier === "moderate confidence"
+                                ? "bg-amber-100 text-amber-700"
+                                : "bg-green-100 text-green-700"
+                          )}
+                        >
+                          {result.triage.tier.toUpperCase()}
+                        </span>
+                        <p className="text-sm font-semibold text-foreground">
+                          Recommendation: {result.triage.recommendation}
+                        </p>
+                        <p className="text-xs text-muted-foreground">
+                          {result.triage.rationale}
+                        </p>
+                      </div>
+                    )}
+                    <p className="text-sm text-muted-foreground leading-relaxed">
+                      Grad-CAM highlights the image regions that contributed most to this prediction.
+                    </p>
                   </div>
                 </>
               );
             })()}
+          </div>
+
+          <div className="mt-6 grid gap-4 md:grid-cols-2">
+            <div className="rounded-xl border border-border bg-muted/30 p-3">
+              <p className="text-xs font-medium text-muted-foreground mb-2 flex items-center gap-2">
+                <ImageIcon className="h-3.5 w-3.5" /> Original image
+              </p>
+              <div className="overflow-hidden rounded-lg bg-background">
+                <img
+                  src={selectedImage ?? undefined}
+                  alt="Uploaded medical image"
+                  className="h-56 w-full object-contain"
+                />
+              </div>
+            </div>
+
+            <div className="rounded-xl border border-border bg-muted/30 p-3">
+              <p className="text-xs font-medium text-muted-foreground mb-2 flex items-center gap-2">
+                <Sparkles className="h-3.5 w-3.5" /> Grad-CAM heatmap
+              </p>
+              <div className="overflow-hidden rounded-lg bg-background flex items-center justify-center h-56">
+                {result.gradcam?.available && result.gradcam.overlay_base64 ? (
+                  <img
+                    src={result.gradcam.overlay_base64}
+                    alt="Grad-CAM explanation overlay"
+                    className="h-full w-full object-contain"
+                  />
+                ) : (
+                  <div className="px-4 text-center text-sm text-muted-foreground">
+                    {result.gradcam?.reason ?? "Grad-CAM is not available for the selected model."}
+                  </div>
+                )}
+              </div>
+            </div>
           </div>
 
           <div className="mt-6 pt-4 border-t border-border">

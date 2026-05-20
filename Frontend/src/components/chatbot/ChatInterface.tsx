@@ -1,13 +1,24 @@
 import { useState, useRef, useEffect } from "react";
-import { Send, Bot, User, Loader2, Sparkles } from "lucide-react";
+import { Send, Bot, User, Loader2, Sparkles, ChevronDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+
+interface Source {
+  id: number;
+  source: string;
+  title: string;
+  chunk_index: number;
+  score: number;
+  text_preview: string;
+}
 
 interface Message {
   id: string;
   content: string;
   role: "user" | "assistant";
   timestamp: Date;
+  sources?: Source[];
+  status?: string;
 }
 
 const suggestedQuestions = [
@@ -16,6 +27,58 @@ const suggestedQuestions = [
   "What does a benign result mean?",
   "What are the risk factors for breast cancer?",
 ];
+
+// Component for displaying sources/citations
+const SourcesPanel = ({ sources }: { sources: Source[] }) => {
+  const [isExpanded, setIsExpanded] = useState(false);
+
+  if (!sources || sources.length === 0) {
+    return null;
+  }
+
+  return (
+    <div className="mt-3 text-xs">
+      <button
+        onClick={() => setIsExpanded(!isExpanded)}
+        className="flex items-center gap-1 text-muted-foreground hover:text-foreground transition-colors"
+      >
+        <ChevronDown
+          className={cn(
+            "h-4 w-4 transition-transform",
+            isExpanded ? "rotate-0" : "-rotate-90"
+          )}
+        />
+        <span className="font-medium">
+          {sources.length} source{sources.length !== 1 ? "s" : ""} cited
+        </span>
+      </button>
+
+      {isExpanded && (
+        <div className="mt-2 space-y-2 border-t border-border pt-2">
+          {sources.map((source) => (
+            <div
+              key={source.id}
+              className="bg-background/30 rounded-lg p-2 text-[11px] space-y-1"
+            >
+              <div className="flex items-start justify-between">
+                <div className="font-medium text-foreground">[{source.id}] {source.title}</div>
+                <span className="inline-block px-2 py-0.5 rounded bg-primary/10 text-primary text-[10px]">
+                  {(source.score * 100).toFixed(0)}% match
+                </span>
+              </div>
+              <p className="text-muted-foreground">
+                {source.source} • chunk #{source.chunk_index}
+              </p>
+              <p className="text-muted-foreground italic line-clamp-2">
+                "{source.text_preview}"
+              </p>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+};
 
 const ChatInterface = () => {
   const [messages, setMessages] = useState<Message[]>([
@@ -53,36 +116,50 @@ const ChatInterface = () => {
     setInputValue("");
     setIsTyping(true);
 
-    // Simulate API response - Replace with actual API integration
-    await new Promise((resolve) => setTimeout(resolve, 1500));
+    try {
+      // Call the real /chat API endpoint via the frontend proxy.
+      const response = await fetch("/chat", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          message: content.trim(),
+        }),
+      });
 
-    const assistantMessage: Message = {
-      id: (Date.now() + 1).toString(),
-      content: getMockResponse(content),
-      role: "assistant",
-      timestamp: new Date(),
-    };
+      if (!response.ok) {
+        throw new Error(`API error: ${response.status}`);
+      }
 
-    setMessages((prev) => [...prev, assistantMessage]);
-    setIsTyping(false);
-  };
+      const data = await response.json();
 
-  const getMockResponse = (question: string): string => {
-    const responses: Record<string, string> = {
-      "What are the early signs of breast cancer?":
-        "Early signs of breast cancer may include:\n\n• A lump or thickening in the breast or underarm area\n• Changes in breast size or shape\n• Skin changes like dimpling, puckering, or redness\n• Nipple changes or discharge\n• Persistent breast pain\n\nRegular self-exams and mammograms are important for early detection. Please consult a healthcare provider if you notice any changes.",
-      "How often should I get a mammogram?":
-        "Mammogram screening guidelines vary by organization, but generally:\n\n• Ages 40-44: Optional annual screening\n• Ages 45-54: Annual mammograms recommended\n• Ages 55+: Every 1-2 years based on preference\n\nWomen with higher risk factors may need to start earlier or have more frequent screenings. Discuss your personal risk factors with your doctor.",
-      "What does a benign result mean?":
-        "A benign result means the cells examined are non-cancerous. This is good news! However:\n\n• Some benign conditions may still require monitoring\n• Follow your doctor's recommendations for follow-up care\n• Continue regular screening as advised\n\nBenign doesn't mean you should skip future screenings - early detection remains important.",
-      "What are the risk factors for breast cancer?":
-        "Key risk factors include:\n\n**Non-modifiable factors:**\n• Age (risk increases with age)\n• Family history of breast cancer\n• Genetic mutations (BRCA1, BRCA2)\n• Personal history of breast conditions\n\n**Modifiable factors:**\n• Physical inactivity\n• Excess weight\n• Alcohol consumption\n• Hormone therapy\n\nMany people with risk factors never develop breast cancer, and some without known risk factors do. Regular screening is important for everyone.",
-    };
+      const assistantMessage: Message = {
+        id: (Date.now() + 1).toString(),
+        content: data.answer,
+        role: "assistant",
+        timestamp: new Date(),
+        sources: data.sources || [],
+        status: data.status,
+      };
 
-    return (
-      responses[question] ||
-      "Thank you for your question. I'm here to provide general health information about breast cancer and screening. For personalized medical advice, please consult with a healthcare professional. Is there anything specific about breast cancer awareness or screening I can help explain?"
-    );
+      setMessages((prev) => [...prev, assistantMessage]);
+    } catch (error) {
+      console.error("Chat error:", error);
+
+      const errorMessage: Message = {
+        id: (Date.now() + 1).toString(),
+        content: "Sorry, I encountered an error while processing your question. Please try again or contact support if the problem persists.",
+        role: "assistant",
+        timestamp: new Date(),
+        sources: [],
+        status: "error",
+      };
+
+      setMessages((prev) => [...prev, errorMessage]);
+    } finally {
+      setIsTyping(false);
+    }
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -143,6 +220,12 @@ const ChatInterface = () => {
               <p className="text-sm whitespace-pre-wrap leading-relaxed">
                 {message.content}
               </p>
+
+              {/* Sources panel for assistant messages */}
+              {message.role === "assistant" && message.sources && (
+                <SourcesPanel sources={message.sources} />
+              )}
+
               <p
                 className={cn(
                   "text-[10px] mt-2",

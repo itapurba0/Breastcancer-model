@@ -5,8 +5,8 @@ import { Shield, Clock, CheckCircle } from "lucide-react";
 const Classification = () => {
   const benefits = [
     { icon: Shield, text: "Secure & encrypted uploads" },
-    { icon: Clock, text: "Results in seconds" },
-    { icon: CheckCircle, text: "High accuracy AI model" },
+    { icon: Clock, text: "Risk-based clinical recommendations" },
+    { icon: CheckCircle, text: "Explainable AI with Grad-CAM" },
   ];
 
   return (
@@ -20,7 +20,7 @@ const Classification = () => {
             Breast Cancer Classification
           </h1>
           <p className="text-muted-foreground max-w-xl mx-auto">
-            Upload a Ultrasound image for AI-powered analysis. Our deep learning model will classify the image and provide insights.
+            Upload an ultrasound image for AI-powered analysis. Our deep learning model classifies the image, explains it with Grad-CAM heatmap, and provides risk-based clinical recommendations.
           </p>
 
           {/* Benefits */}
@@ -47,15 +47,15 @@ const Classification = () => {
             <ol className="space-y-3">
               <li className="flex items-start gap-3">
                 <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground text-xs font-bold">1</span>
-                <p className="text-sm text-muted-foreground">Upload a Ultrasound image (JPG, PNGformat)</p>
+                <p className="text-sm text-muted-foreground">Upload an ultrasound image (JPG or PNG)</p>
               </li>
               <li className="flex items-start gap-3">
                 <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground text-xs font-bold">2</span>
-                <p className="text-sm text-muted-foreground">Our AI model analyzes the image using deep learning techniques</p>
+                <p className="text-sm text-muted-foreground">Our AI model analyzes the image and generates a Grad-CAM explanation heatmap</p>
               </li>
               <li className="flex items-start gap-3">
                 <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground text-xs font-bold">3</span>
-                <p className="text-sm text-muted-foreground">Receive a classification result with confidence score</p>
+                <p className="text-sm text-muted-foreground">Receive classification, confidence score, risk tier assessment, clinical recommendation, and Grad-CAM explanation</p>
               </li>
             </ol>
             <p className="text-xs text-muted-foreground mt-4 pt-4 border-t border-border">

@@ -3,3 +3,5 @@
 high_confidence_filtered.json
 high_confidence.json
 *.doc
+backend/.env
+backend/chatbot/.env
