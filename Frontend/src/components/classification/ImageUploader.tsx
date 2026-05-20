@@ -7,12 +7,7 @@ interface ClassificationResult {
   prediction: string;
   confidence: number;
   details: string;
-  gradcam?: {
-    available: boolean;
-    overlay_base64?: string;
-    layer_name?: string;
-    reason?: string;
-  };
+  gradcam?: string;
   triage?: {
     tier: string;
     recommendation: string;
@@ -105,7 +100,7 @@ const ImageUploader = () => {
         prediction: json.predicted ?? json.prediction ?? json.label ?? "Unknown",
         confidence: normalizedConfidence,
         details: json.details ?? JSON.stringify(json),
-        gradcam: json.gradcam,
+        gradcam: json.gradcam_image,
         triage: json.triage,
       });
     } catch (err) {
@@ -321,15 +316,15 @@ const ImageUploader = () => {
                 <Sparkles className="h-3.5 w-3.5" /> Grad-CAM heatmap
               </p>
               <div className="overflow-hidden rounded-lg bg-background flex items-center justify-center h-56">
-                {result.gradcam?.available && result.gradcam.overlay_base64 ? (
+                {result.gradcam ? (
                   <img
-                    src={result.gradcam.overlay_base64}
+                    src={result.gradcam}
                     alt="Grad-CAM explanation overlay"
                     className="h-full w-full object-contain"
                   />
                 ) : (
                   <div className="px-4 text-center text-sm text-muted-foreground">
-                    {result.gradcam?.reason ?? "Grad-CAM is not available for the selected model."}
+                    Grad-CAM is not available for the selected model.
                   </div>
                 )}
               </div>

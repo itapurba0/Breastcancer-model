@@ -6,7 +6,7 @@ from typing import Dict
 
 import model_utils
 from contextlib import asynccontextmanager
-
+import traceback
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -59,16 +59,24 @@ async def predict(file: UploadFile = File(...)):
             pred_name = IDX_TO_NAME.get(pred_idx, str(pred_idx))
             name_prob = {IDX_TO_NAME.get(i, str(i)): float(probs[i]) for i in range(len(probs))}
             confidence = float(probs[pred_idx]) if probs else None
+
+            heatmap = model_utils.make_gradcam_heatmap(x, MODEL, pred_idx)
+            gradcam_b64 = model_utils.generate_gradcam_base64(data, heatmap) # type: ignore
+            gradcam_data_uri = f"data:image/jpeg;base64,{gradcam_b64}"
+            print(gradcam_data_uri)
             return {
                 "predicted": pred_name,
                 "predicted_idx": pred_idx,
                 "confidence": confidence,
                 "probabilities": name_prob,
+                "gradcam_image": gradcam_data_uri
             }
         except Exception as e:
+            traceback.print_exc()
             raise HTTPException(status_code=500, detail=f"Local prediction failed: {e}")
 
     # proxy path
+
     proxy_url = os.environ.get("MODEL_PROXY_URL", "http://127.0.0.1:8001/predict")
     try:
         resp = model_utils.proxy_predict(data, getattr(file, "filename", "upload"), file.content_type or "application/octet-stream", proxy_url)
