@@ -290,7 +290,7 @@ import time
 import warnings
 from dotenv import load_dotenv
 from qdrant_client import QdrantClient
-from fastembed import TextEmbedding  # <-- No PyTorch! Completely segfault-proof.
+from fastembed import TextEmbedding  
 import ollama
 
 # Load Environment Variables

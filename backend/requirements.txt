@@ -16,3 +16,6 @@ pytest-asyncio
 httpx
 opencv-python-headless
 beautifulsoup4
+fastembed
+ollama
+pypdf
