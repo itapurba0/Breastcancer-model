@@ -4,9 +4,13 @@ from fastapi.middleware.cors import CORSMiddleware # type: ignore
 import os
 from typing import Dict
 
+from pydantic import BaseModel
+import uvicorn
+
 import model_utils
 from contextlib import asynccontextmanager
 import traceback
+from chatbot.engine import generate_rag_response
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -23,7 +27,7 @@ async def lifespan(app: FastAPI):
 app = FastAPI(title="Backend Classifier API", lifespan=lifespan)
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000", "http://127.0.0.1:3000"],
+    allow_origins=["http://localhost:3000", "http://127.0.0.1:3000", "http://localhost:3001", "http://127.0.0.1:3001"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -63,7 +67,7 @@ async def predict(file: UploadFile = File(...)):
             heatmap = model_utils.make_gradcam_heatmap(x, MODEL, pred_idx)
             gradcam_b64 = model_utils.generate_gradcam_base64(data, heatmap) # type: ignore
             gradcam_data_uri = f"data:image/jpeg;base64,{gradcam_b64}"
-            print(gradcam_data_uri)
+            
             return {
                 "predicted": pred_name,
                 "predicted_idx": pred_idx,
@@ -85,3 +89,26 @@ async def predict(file: UploadFile = File(...)):
         raise HTTPException(status_code=503, detail=f"Model not loaded locally and proxy failed: {e}")
 
 
+class ChatRequest(BaseModel):
+    question: str
+
+
+@app.post("/chat")
+async def chat_endpoint(request: ChatRequest):
+    try:
+        # Pass the question from React to your RAG engine
+        bot_reply = generate_rag_response(request.question)
+        
+        # Send the final string back to the React frontend
+        return {
+            "reply": bot_reply,
+            "status": "success"
+        }
+    except Exception as e:
+        print(f"API Error: {e}")
+        raise HTTPException(status_code=500, detail="Internal Server Error")
+
+
+if __name__ == "__main__":
+    print("Starting FastAPI Server...")
+    uvicorn.run("api:app", host="0.0.0.0", port=8000, loop="asyncio")

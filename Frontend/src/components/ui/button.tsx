@@ -5,24 +5,24 @@ import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "@/lib/utils";
 
 const buttonVariants = cva(
-  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-lg text-sm font-semibold ring-offset-background transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0",
+  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-3xl text-sm font-semibold ring-offset-background transition-transform duration-300 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0",
   {
     variants: {
       variant: {
-        default: "bg-primary text-primary-foreground hover:bg-primary/90 shadow-md hover:shadow-lg hover:-translate-y-0.5",
-        destructive: "bg-destructive text-destructive-foreground hover:bg-destructive/90 shadow-md hover:shadow-lg",
-        outline: "border-2 border-primary bg-transparent text-primary hover:bg-primary hover:text-primary-foreground",
-        secondary: "bg-secondary text-secondary-foreground hover:bg-secondary/80 shadow-sm",
-        ghost: "hover:bg-accent hover:text-accent-foreground",
-        link: "text-primary underline-offset-4 hover:underline",
-        medical: "bg-gradient-to-r from-primary to-primary/80 text-primary-foreground shadow-md hover:shadow-glow hover:-translate-y-0.5",
-        success: "bg-success text-primary-foreground hover:bg-success/90 shadow-md",
+        default: "bg-highlight text-primary-foreground hover:bg-highlight/95 soft-shadow-sm hover:soft-shadow-md hover:-translate-y-1",
+        destructive: "bg-destructive text-destructive-foreground hover:bg-destructive/90 soft-shadow-sm hover:soft-shadow-md",
+        outline: "border-2 border-brand bg-transparent text-brand hover:bg-brand/5 hover:text-brand hover:-translate-y-1",
+        secondary: "bg-brand text-primary-foreground hover:bg-brand/95 soft-shadow-sm hover:soft-shadow-md",
+        ghost: "hover:bg-sage hover:text-accent-foreground rounded-3xl",
+        link: "text-brand underline-offset-4 hover:underline",
+        medical: "bg-gradient-to-r from-brand to-brand/85 text-primary-foreground soft-shadow-sm hover:soft-shadow-md hover:-translate-y-1",
+        success: "bg-sage text-accent-foreground hover:bg-sage/95 soft-shadow-sm hover:-translate-y-1",
       },
       size: {
-        default: "h-11 px-6 py-2",
-        sm: "h-9 rounded-md px-4",
-        lg: "h-12 rounded-lg px-8 text-base",
-        icon: "h-10 w-10",
+        default: "h-12 px-6",
+        sm: "h-10 rounded-2xl px-4",
+        lg: "h-14 rounded-3xl px-8 text-base",
+        icon: "h-12 w-12 rounded-3xl",
       },
     },
     defaultVariants: {
@@ -34,7 +34,7 @@ const buttonVariants = cva(
 
 export interface ButtonProps
   extends React.ButtonHTMLAttributes<HTMLButtonElement>,
-    VariantProps<typeof buttonVariants> {
+  VariantProps<typeof buttonVariants> {
   asChild?: boolean;
 }
 

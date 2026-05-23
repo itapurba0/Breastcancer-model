@@ -1,160 +1,181 @@
 import { Link } from "react-router-dom";
-import { ArrowRight, Microscope, MessageCircle, Shield, Zap, Heart } from "lucide-react";
+import { ArrowRight, Microscope, MessageCircle, ShieldAlert, Cpu, Heart, CheckCircle2 } from "lucide-react";
+import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import Header from "@/components/layout/Header";
+import HeroCanvas from "@/components/layout/HeroCanvas";
+
+const containerVariants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.12,
+      delayChildren: 0.15,
+    },
+  },
+};
+
+const itemVariants = {
+  hidden: { opacity: 0, y: 15, filter: "blur(10px)" },
+  visible: {
+    opacity: 1,
+    y: 0,
+    filter: "blur(0px)",
+    transition: {
+      type: "tween",
+      ease: "easeOut",
+      duration: 0.55,
+    },
+  },
+};
 
 const Index = () => {
-  const features = [
+  const nodes = [
     {
       icon: Microscope,
-      title: "AI-Powered Classification",
-      description: "Upload mammography images and receive instant analysis using advanced deep learning models.",
+      title: "MAMMOGRAPHY_INF_SCAN",
+      description: "Deep learning tensor classification models providing prompt visual tissue activation reports.",
     },
     {
       icon: MessageCircle,
-      title: "Medical Chatbot",
-      description: "Get answers to your health questions 24/7 with our intelligent medical assistant.",
+      title: "NEURAL_MED_CHAT",
+      description: "Clinical support LLM chatbot offering instant assistance and general medical screening advice.",
     },
     {
-      icon: Shield,
-      title: "Secure & Private",
-      description: "Your medical data is encrypted and protected with enterprise-grade security.",
+      icon: Cpu,
+      title: "EXPLAINABLE_GRAD_CAM",
+      description: "Tensors are mapped back into standard visual spaces, overlaying tissue weights and gradients.",
     },
     {
-      icon: Zap,
-      title: "Instant Results",
-      description: "Receive classification results in seconds, helping speed up the screening process.",
+      icon: ShieldAlert,
+      title: "HIPAA_DATA_SECURE",
+      description: "All uploaded dicoms, ultrasonography, and medical metadata are fully encrypted in-flight.",
     },
   ];
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-transparent text-[#333333] relative selection:bg-[#FFE082]/40 selection:text-[#333333]">
+      {/* Fixed full-screen breathing monochromatic 3D wireframe backdrop */}
+      <HeroCanvas />
+
+      {/* Floating Header */}
       <Header />
 
-      {/* Hero Section */}
-      <section className="relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-accent/10" />
-        <div className="absolute top-20 right-0 w-96 h-96 bg-primary/10 rounded-full blur-3xl" />
-        <div className="absolute bottom-0 left-0 w-96 h-96 bg-accent/20 rounded-full blur-3xl" />
+      {/* Hero Panel */}
+      <main className="container mx-auto px-6 py-16 md:py-24 max-w-5xl relative z-10">
+        <motion.div
+          variants={containerVariants}
+          initial="hidden"
+          animate="visible"
+          className="space-y-12"
+        >
+          {/* Main Visual Board (frosted glass) */}
+          <motion.div
+            variants={itemVariants}
+            className="glass-panel rounded-[2.5rem] p-8 md:p-14 relative overflow-hidden shadow-lg border border-[#78909C]/15"
+          >
+            {/* Subtle light corner glows */}
+            <div className="absolute -top-40 -right-40 w-96 h-96 bg-[#FFE082]/10 rounded-full blur-3xl pointer-events-none" />
+            <div className="absolute -bottom-40 -left-40 w-96 h-96 bg-[#E0F2F1]/30 rounded-full blur-3xl pointer-events-none" />
 
-        <div className="container mx-auto px-4 py-20 md:py-32 relative">
-          <div className="max-w-3xl mx-auto text-center">
-            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-accent text-accent-foreground text-sm font-medium mb-6 animate-fade-in">
-              <Heart className="h-4 w-4 text-primary" />
-              Advanced AI for Early Detection
-            </div>
+            <div className="max-w-3xl mx-auto text-center space-y-8">
+              {/* Category Pill Tag */}
+              <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-slate-100/80 border border-[#78909C]/25 text-xs font-mono text-[#455A64] tracking-wide font-bold">
+                <Heart className="h-3.5 w-3.5 animate-pulse text-[#78909C]" />
+                <span>[ AI_TRIAGE_CORE_v2.1 ]</span>
+              </div>
 
-            <h1 className="text-4xl md:text-6xl font-bold text-foreground leading-tight mb-6 animate-slide-up">
-              Breast Cancer
-              <span className="block text-primary">Classification & Support</span>
-            </h1>
+              {/* High-contrast Title */}
+              <h1 className="text-4xl md:text-7xl font-extrabold text-[#333333] leading-tight font-heading tracking-[-0.04em]">
+                Deep Learning Triage for
+                <span className="block mt-2 bg-gradient-to-r from-[#333333] via-[#455A64] to-[#78909C] bg-clip-text text-transparent">
+                  Breast Cancer Screening
+                </span>
+              </h1>
 
-            <p className="text-lg md:text-xl text-muted-foreground mb-10 leading-relaxed animate-slide-up" style={{ animationDelay: "100ms" }}>
-              Harness the power of artificial intelligence for early breast cancer detection.
-              Upload medical images for instant analysis and chat with our medical assistant for support.
-            </p>
-
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-4 animate-slide-up" style={{ animationDelay: "200ms" }}>
-              <Link to="/classification">
-                <Button variant="medical" size="lg" className="gap-2">
-                  <Microscope className="h-5 w-5" />
-                  Start Classification
-                  <ArrowRight className="h-4 w-4" />
-                </Button>
-              </Link>
-              <Link to="/chatbot">
-                <Button variant="outline" size="lg" className="gap-2">
-                  <MessageCircle className="h-5 w-5" />
-                  Chat with Assistant
-                </Button>
-              </Link>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Features Section */}
-      <section className="py-20 bg-muted/30">
-        <div className="container mx-auto px-4">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
-              Comprehensive Medical Support
-            </h2>
-            <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-              Our platform combines cutting-edge AI technology with user-friendly design to provide reliable medical assistance.
-            </p>
-          </div>
-
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {features.map((feature, index) => {
-              const Icon = feature.icon;
-              return (
-                <div
-                  key={index}
-                  className="bg-card rounded-2xl p-6 border border-border shadow-card hover:shadow-card-hover hover:-translate-y-1 transition-all duration-300 animate-slide-up"
-                  style={{ animationDelay: `${index * 100}ms` }}
-                >
-                  <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-accent mb-4">
-                    <Icon className="h-6 w-6 text-primary" />
-                  </div>
-                  <h3 className="text-lg font-semibold text-foreground mb-2">
-                    {feature.title}
-                  </h3>
-                  <p className="text-sm text-muted-foreground leading-relaxed">
-                    {feature.description}
-                  </p>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-      </section>
-
-      {/* CTA Section */}
-      <section className="py-20">
-        <div className="container mx-auto px-4">
-          <div className="bg-gradient-to-r from-primary to-primary/80 rounded-3xl p-8 md:p-12 text-center relative overflow-hidden">
-            <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxnIGZpbGw9IiNmZmYiIGZpbGwtb3BhY2l0eT0iMC4xIj48cGF0aCBkPSJNMzYgMzRjMC0yIDItNCAyLTRzLTItMi00LTItNCAwLTQgMiAwIDIgMiA0IDQgNCA0LTIgNC00IDIgMCAwLTItMi0yLTQtMnoiLz48L2c+PC9nPjwvc3ZnPg==')] opacity-30" />
-
-            <div className="relative">
-              <h2 className="text-2xl md:text-4xl font-bold text-primary-foreground mb-4">
-                Ready to Get Started?
-              </h2>
-              <p className="text-primary-foreground/80 mb-8 max-w-xl mx-auto">
-                Take the first step towards early detection. Our AI-powered tools are here to support you.
+              {/* Descriptive context */}
+              <p className="text-sm md:text-base text-[#616161] font-sans max-w-2xl mx-auto leading-relaxed font-semibold">
+                ClassifierAI harnesses medical deep convolutional architectures to map visual tissues.
+                Upload mammography images for visual gradient explanations and chat with our support model.
               </p>
-              <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+
+              {/* Floating Action Buttons */}
+              <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-4">
                 <Link to="/classification">
-                  <Button variant="secondary" size="lg" className="gap-2 bg-primary-foreground text-primary hover:bg-primary-foreground/90">
-                    Upload Image
-                    <ArrowRight className="h-4 w-4" />
+                  <Button variant="outline" className="h-12 px-6 bg-[#FFE082] hover:bg-[#FFE082]/90 border border-[#FFE082]/40 text-[#455A64] hover:scale-105 transition-all duration-300 font-sans font-bold tracking-wide rounded-full flex items-center gap-2 shadow-sm">
+                    <Microscope className="h-4 w-4" />
+                    Initialize Scan Routine
+                    <ArrowRight className="h-3.5 w-3.5 ml-0.5" />
                   </Button>
                 </Link>
                 <Link to="/chatbot">
-                  <Button variant="outline" size="lg" className="gap-2 border-primary-foreground/30 text-primary-foreground hover:bg-primary-foreground/10">
-                    Ask a Question
+                  <Button variant="outline" className="h-12 px-6 bg-white/80 border border-[#78909C]/25 text-[#455A64] hover:bg-[#78909C]/5 hover:scale-105 transition-all duration-300 font-sans font-bold tracking-wide rounded-full flex items-center gap-2 shadow-sm">
+                    <MessageCircle className="h-4 w-4" />
+                    Query Clinical LLM
                   </Button>
                 </Link>
               </div>
             </div>
-          </div>
-        </div>
-      </section>
+          </motion.div>
+
+          {/* Interactive Feature Grid */}
+          <motion.div
+            variants={itemVariants}
+            className="grid md:grid-cols-2 gap-6"
+          >
+            {nodes.map((node, index) => {
+              const Icon = node.icon;
+              return (
+                <motion.div
+                  key={index}
+                  whileHover={{
+                    y: -4,
+                    scale: 1.01,
+                    boxShadow: "0 30px 60px rgba(120, 144, 156, 0.12)"
+                  }}
+                  transition={{ type: "tween", ease: "easeOut", duration: 0.35 }}
+                  className="glass-panel rounded-[2rem] p-7 flex gap-5 shadow-sm border border-[#78909C]/15 transition-all duration-300 bg-white"
+                >
+                  <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-slate-50 border border-[#78909C]/20">
+                    <Icon className="h-5 w-5 text-[#78909C]" />
+                  </div>
+                  <div className="space-y-2">
+                    <h3 className="text-xs font-bold tracking-wider font-mono text-[#333333]">
+                      {node.title}
+                    </h3>
+                    <p className="text-xs md:text-sm text-[#616161] font-sans leading-relaxed font-semibold">
+                      {node.description}
+                    </p>
+                  </div>
+                </motion.div>
+              );
+            })}
+          </motion.div>
+
+          {/* Verification / Security note */}
+          <motion.div
+            variants={itemVariants}
+            className="glass-panel rounded-2xl p-5 flex items-center justify-center gap-3 text-center border border-[#78909C]/15 bg-white/70 shadow-sm"
+          >
+            <CheckCircle2 className="h-4 w-4 text-[#78909C]" />
+            <p className="text-xs text-[#616161] font-sans font-semibold">
+              Developed as clinical support assistance. All screening reports must be confirmed by qualified medical oncology staff.
+            </p>
+          </motion.div>
+        </motion.div>
+      </main>
 
       {/* Footer */}
-      <footer className="py-8 border-t border-border">
-        <div className="container mx-auto px-4">
-          <div className="flex flex-col md:flex-row items-center justify-between gap-4">
-            <div className="flex items-center gap-2">
-              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary">
-                <Heart className="h-4 w-4 text-primary-foreground" />
-              </div>
-              <span className="font-semibold text-foreground">Classifier</span>
-            </div>
-            <p className="text-sm text-muted-foreground text-center">
-              For informational purposes only. Not a substitute for professional medical advice.
-            </p>
-          </div>
+      <footer className="py-10 border-t border-slate-100 relative z-10 bg-slate-50/50">
+        <div className="container mx-auto px-6 max-w-5xl flex flex-col md:flex-row items-center justify-between gap-4">
+          <span className="footer-small font-mono text-[#616161] font-bold">
+            &copy; 2026 CLASSIFIER_AI_LABS. All rights reserved.
+          </span>
+          <span className="footer-small font-mono text-[#616161] flex items-center gap-2 font-bold">
+            <span className="w-2.5 h-2.5 rounded-full bg-teal-500 animate-ping" />
+            VIRTUAL_SCAN_NODE_ONLINE
+          </span>
         </div>
       </footer>
     </div>

@@ -1,6 +1,7 @@
 /** @type {import('tailwindcss').Config} */
 module.exports = {
-    darkMode: ["class"],
+    // Light-theme focused layout only (we're moving to a bespoke light Health-Tech theme)
+    media: false,
     content: [
         "./index.html",
         "./pages/**/*.{ts,tsx}",
@@ -23,39 +24,10 @@ module.exports = {
                 input: "hsl(var(--input))",
             },
             fontFamily: {
-                sans: [
-                    "Work Sans",
-                    "ui-sans-serif",
-                    "system-ui",
-                    "-apple-system",
-                    "BlinkMacSystemFont",
-                    "Segoe UI",
-                    "Roboto",
-                    "Helvetica Neue",
-                    "Arial",
-                    "Noto Sans",
-                    "sans-serif",
-                ],
-                serif: [
-                    "Lora",
-                    "ui-serif",
-                    "Georgia",
-                    "Cambria",
-                    "Times New Roman",
-                    "Times",
-                    "serif",
-                ],
-                mono: [
-                    "Inconsolata",
-                    "ui-monospace",
-                    "SFMono-Regular",
-                    "Menlo",
-                    "Monaco",
-                    "Consolas",
-                    "Liberation Mono",
-                    "Courier New",
-                    "monospace",
-                ],
+                sans: ["Inter", "ui-sans-serif", "system-ui"],
+                heading: ["Plus Jakarta Sans", "Outfit", "ui-sans-serif", "system-ui"],
+                serif: ["Lora", "ui-serif", "Georgia"],
+                mono: ["Inconsolata", "ui-monospace", "SFMono-Regular"],
             },
             colors: {
                 border: "hsl(var(--border))",
@@ -98,6 +70,16 @@ module.exports = {
                     coral: "hsl(var(--medical-coral))",
                     "coral-light": "hsl(var(--medical-coral-light))",
                 },
+                brand: {
+                    DEFAULT: "#78909C",
+                    contrast: "#333333",
+                },
+                highlight: {
+                    DEFAULT: "#FFE082",
+                },
+                sage: {
+                    DEFAULT: "#E0F2F1",
+                },
                 success: {
                     DEFAULT: "hsl(var(--success))",
                     light: "hsl(var(--success-light))",
@@ -118,9 +100,14 @@ module.exports = {
                 },
             },
             borderRadius: {
-                lg: "var(--radius)",
-                md: "calc(var(--radius) - 2px)",
-                sm: "calc(var(--radius) - 4px)",
+                none: "0",
+                sm: "0.25rem",
+                DEFAULT: "0.75rem",
+                md: "1rem",
+                lg: "1.5rem",
+                xl: "1.75rem",
+                '3xl': '1.75rem',
+                full: "9999px",
             },
             keyframes: {
                 "accordion-down": {
@@ -136,17 +123,12 @@ module.exports = {
                 "accordion-down": "accordion-down 0.2s ease-out",
                 "accordion-up": "accordion-up 0.2s ease-out",
             },
+            // Replace harsh default shadows with ultra-soft, diffused shadows used consistently
             boxShadow: {
-                glow: "0 0 20px hsl(174 72% 40% / 0.3)",
-                card: "0 4px 6px -1px hsl(210 20% 50% / 0.1), 0 2px 4px -2px hsl(210 20% 50% / 0.1)",
-                "card-hover": "0 10px 15px -3px hsl(210 20% 50% / 0.1), 0 4px 6px -4px hsl(210 20% 50% / 0.1)",
-                "2xs": "var(--shadow-2xs)",
-                xs: "var(--shadow-xs)",
-                sm: "var(--shadow-sm)",
-                md: "var(--shadow-md)",
-                lg: "var(--shadow-lg)",
-                xl: "var(--shadow-xl)",
-                "2xl": "var(--shadow-2xl)",
+                "soft": "0 14px 40px rgba(120,144,156,0.06)",
+                "soft-md": "0 20px 60px rgba(120,144,156,0.08)",
+                "soft-lg": "0 30px 80px rgba(120,144,156,0.10)",
+                "none": "none",
             },
         },
     },

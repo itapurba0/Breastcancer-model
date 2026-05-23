@@ -1,68 +1,85 @@
+import { motion } from "framer-motion";
 import Header from "@/components/layout/Header";
 import ImageUploader from "@/components/classification/ImageUploader";
-import { Shield, Clock, CheckCircle } from "lucide-react";
+import HeroCanvas from "@/components/layout/HeroCanvas";
+import { ShieldCheck, Sparkles, Network } from "lucide-react";
+
+const pageVariants = {
+  hidden: { opacity: 0, filter: "blur(10px)" },
+  visible: {
+    opacity: 1,
+    filter: "blur(0px)",
+    transition: {
+      type: "tween",
+      ease: "easeOut",
+      duration: 0.55,
+    },
+  },
+};
 
 const Classification = () => {
   const benefits = [
-    { icon: Shield, text: "Secure & encrypted uploads" },
-    { icon: Clock, text: "Risk-based clinical recommendations" },
-    { icon: CheckCircle, text: "Explainable AI with Grad-CAM" },
+    { icon: ShieldCheck, text: "HIPAA_ENCRYPTED_TRANSFER" },
+    { icon: Sparkles, text: "AI_EXPLAINABLE_GRAD_CAM" },
+    { icon: Network, text: "TRIAGE_CLINICAL_ADVICE" },
   ];
 
+  function humanize(token: string) {
+    return token
+      .replace(/_/g, " ")
+      .toLowerCase()
+      .replace(/\b\w/g, (c) => c.toUpperCase());
+  }
+
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-transparent text-[#333333] relative selection:bg-[#FFE082]/40 selection:text-[#333333]">
+      {/* 3D breathing Neural Net background void */}
+      <HeroCanvas />
+
+      {/* Floating Header */}
       <Header />
 
-      <main className="container mx-auto px-4 py-8 md:py-12">
-        {/* Page Header */}
-        <div className="text-center mb-10">
-          <h1 className="text-3xl md:text-4xl font-bold text-foreground mb-3">
-            Breast Cancer Classification
-          </h1>
-          <p className="text-muted-foreground max-w-xl mx-auto">
-            Upload an ultrasound image for AI-powered analysis. Our deep learning model classifies the image, explains it with Grad-CAM heatmap, and provides risk-based clinical recommendations.
-          </p>
+      <main className="container mx-auto px-6 py-12 md:py-16 max-w-4xl relative z-10">
+        <motion.div
+          initial="hidden"
+          animate="visible"
+          variants={pageVariants}
+          className="space-y-12"
+        >
+          {/* Frosted Heading Panel */}
+          <div className="glass-panel rounded-[2rem] p-8 md:p-10 text-center space-y-5 border border-[#78909C]/15 shadow-md relative overflow-hidden">
+            <div className="absolute -top-24 -left-24 w-48 h-48 bg-[#FFE082]/5 rounded-full blur-2xl pointer-events-none" />
 
-          {/* Benefits */}
-          <div className="flex flex-wrap items-center justify-center gap-6 mt-6">
-            {benefits.map((benefit, index) => {
-              const Icon = benefit.icon;
-              return (
-                <div key={index} className="flex items-center gap-2 text-sm text-muted-foreground">
-                  <Icon className="h-4 w-4 text-primary" />
-                  <span>{benefit.text}</span>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-
-        {/* Upload Section */}
-        <ImageUploader />
-
-        {/* Information Section */}
-        <div className="mt-12 max-w-2xl mx-auto">
-          <div className="bg-accent/50 rounded-2xl p-6 border border-border">
-            <h3 className="font-semibold text-foreground mb-3">How It Works</h3>
-            <ol className="space-y-3">
-              <li className="flex items-start gap-3">
-                <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground text-xs font-bold">1</span>
-                <p className="text-sm text-muted-foreground">Upload an ultrasound image (JPG or PNG)</p>
-              </li>
-              <li className="flex items-start gap-3">
-                <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground text-xs font-bold">2</span>
-                <p className="text-sm text-muted-foreground">Our AI model analyzes the image and generates a Grad-CAM explanation heatmap</p>
-              </li>
-              <li className="flex items-start gap-3">
-                <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground text-xs font-bold">3</span>
-                <p className="text-sm text-muted-foreground">Receive classification, confidence score, risk tier assessment, clinical recommendation, and Grad-CAM explanation</p>
-              </li>
-            </ol>
-            <p className="text-xs text-muted-foreground mt-4 pt-4 border-t border-border">
-              <strong>Disclaimer:</strong> This tool is for informational purposes only and should not replace professional medical diagnosis. Always consult with a healthcare provider.
+            <h1 className="text-3xl md:text-5xl font-extrabold text-[#455A64] tracking-[-0.03em] font-heading leading-tight">
+              Visual Diagnostic Classification
+            </h1>
+            <p className="text-sm md:text-base text-[#616161] font-sans max-w-xl mx-auto leading-relaxed font-semibold">
+              Feed digital mammography or ultrasonography images to the core convolutional layers.
+              The system classifies tissue, generates visual gradient heatmaps, and computes risk parameters.
             </p>
+
+            {/* Benefits pill bar */}
+            <div className="flex flex-wrap items-center justify-center gap-3 mt-6 pt-5 border-t border-slate-100">
+              {benefits.map((benefit, index) => {
+                const Icon = benefit.icon;
+                return (
+                  <div
+                    key={index}
+                    className="flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-slate-100 border border-[#78909C]/20 text-[10px] font-mono text-[#455A64] tracking-wide font-bold"
+                  >
+                    <Icon className="h-3.5 w-3.5 text-[#78909C]" />
+                    <span>{humanize(benefit.text)}</span>
+                  </div>
+                );
+              })}
+            </div>
           </div>
-        </div>
+
+          {/* Refined Upload Terminal */}
+          <ImageUploader />
+
+          {/* Removed: Deep-learning Technical Specs and global disclaimer per UX request */}
+        </motion.div>
       </main>
     </div>
   );

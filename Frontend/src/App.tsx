@@ -7,24 +7,30 @@ import Index from "./pages/Index";
 import Classification from "./pages/Classification";
 import Chatbot from "./pages/Chatbot";
 import NotFound from "./pages/NotFound";
+import GlobalLayout from "@/components/layout/GlobalLayout";
 
 const queryClient = new QueryClient();
 
-const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <Toaster />
-      <Sonner />
-      <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<Index />} />
-          <Route path="/classification" element={<Classification />} />
-          <Route path="/chatbot" element={<Chatbot />} />
-          <Route path="*" element={<NotFound />} />
-        </Routes>
-      </BrowserRouter>
-    </TooltipProvider>
-  </QueryClientProvider>
-);
+const App = () => {
+  console.log("ClassifierAI: Rendering <App /> component tree...");
+  return (
+    <QueryClientProvider client={queryClient}>
+      <TooltipProvider>
+        <Toaster />
+        <Sonner />
+        <BrowserRouter>
+          <GlobalLayout>
+            <Routes>
+              <Route path="/" element={<Index />} />
+              <Route path="/classification" element={<Classification />} />
+              <Route path="/chatbot" element={<Chatbot />} />
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </GlobalLayout>
+        </BrowserRouter>
+      </TooltipProvider>
+    </QueryClientProvider>
+  );
+};
 
 export default App;
