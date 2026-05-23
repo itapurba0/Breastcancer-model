@@ -288,10 +288,15 @@
 import os
 import time
 import warnings
-from dotenv import load_dotenv
 from qdrant_client import QdrantClient
 from fastembed import TextEmbedding  
 import ollama
+
+try:
+    from dotenv import load_dotenv
+except ImportError:
+    def load_dotenv() -> None:
+        return None
 
 # Load Environment Variables
 load_dotenv()
