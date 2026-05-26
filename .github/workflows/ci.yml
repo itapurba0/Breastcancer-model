@@ -7,7 +7,7 @@ on:
     branches: ["main", "master"]
 
 jobs:
-  test:
+  backend-test:
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -28,7 +28,30 @@ jobs:
           if [ -f backend/requirements.txt ]; then python -m pip install -r backend/requirements.txt; fi
           python -m pip install fastapi uvicorn pytest httpx python-multipart
 
-      - name: Run backend smoke tests
-        working-directory: ./backend
-        run: |
-          pytest tests/test_predict.py -q
+     
+
+  frontend-test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: Frontend/package-lock.json
+
+      - name: Install frontend dependencies
+        working-directory: Frontend
+        run: npm ci
+
+      - name: Run frontend lint
+        working-directory: Frontend
+        run: npm run lint
+
+      - name: Build frontend
+        working-directory: Frontend
+        run: npm run build

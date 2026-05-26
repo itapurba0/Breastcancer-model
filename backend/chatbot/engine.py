@@ -291,6 +291,7 @@ import warnings
 from qdrant_client import QdrantClient
 from fastembed import TextEmbedding  
 import ollama
+from openai import OpenAI
 
 try:
     from dotenv import load_dotenv
@@ -302,6 +303,7 @@ except ImportError:
 load_dotenv()
 QDRANT_URL = os.getenv("QDRANT_URL")
 QDRANT_API_KEY = os.getenv("QDRANT_API_KEY")
+OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY")
 COLLECTION_NAME = "medical_knowledge_base"
 
 # Mute warnings
@@ -319,6 +321,11 @@ except Exception as e:
     print(f"❌ Qdrant Connection Error: {e}")
     qdrant = None
 
+ai_client = OpenAI(
+    base_url="https://openrouter.ai/api/v1",
+    api_key=OPENROUTER_API_KEY,
+)
+
 def retrieve_context(user_question: str, top_k: int = 1):
     if not qdrant:
         return ""
@@ -333,6 +340,7 @@ def retrieve_context(user_question: str, top_k: int = 1):
             collection_name=COLLECTION_NAME,
             query=query_vector,
             limit=top_k,
+            score_threshold=0.5,  # Optional: filter out low-relevance results
             with_payload=True
         )
 
@@ -348,12 +356,38 @@ def retrieve_context(user_question: str, top_k: int = 1):
         print(f"\n❌ Retrieval Error: {e}")
         return ""
 
-def generate_rag_response(user_question: str):
-    print("\n[1/2] Retrieving medical context...")
-    context = retrieve_context(user_question)
+# Change the function to act as a generator
+def generate_rag_response(messages):
+    # --- BULLETPROOF DATA EXTRACTION ---
+    # 1. If it accidentally received a string, just use it directly
+    if isinstance(messages, str):
+        latest_user_question = messages
+        ai_memory = [{"role": "user", "content": messages}]
+    else:
+        # 2. Grab the last message from the list safely
+        last_msg = messages[-1]
+        
+        # 3. Check if FastAPI sent it as a dictionary or a Pydantic object
+        if isinstance(last_msg, dict):
+            latest_user_question = last_msg.get("content", "")
+        else:
+            latest_user_question = getattr(last_msg, "content", str(last_msg))
+
+        # 4. Build the memory array safely
+        ai_memory = []
+        for msg in messages:
+            if isinstance(msg, dict):
+                ai_memory.append({"role": msg.get("role", "user"), "content": msg.get("content", "")})
+            else:
+                ai_memory.append({"role": getattr(msg, "role", "user"), "content": getattr(msg, "content", "")})
+    # ------------------------------------
+
+    print(f"\n[1/2] Retrieving context for: '{latest_user_question}'...")
+    context = retrieve_context(latest_user_question)
 
     if not context.strip():
-        return "I'm sorry, but I don't have enough information in my current medical files to answer that safely."
+        yield "I'm sorry, but I don't have enough information in my current medical files to answer that safely."
+        return
 
     system_prompt = f"""
     You are a compassionate and accurate medical AI assistant.
@@ -362,35 +396,36 @@ def generate_rag_response(user_question: str):
     STRICT RULES:
     1. ONLY use the provided medical context.
     2. Do NOT invent medical facts.
-    3. Keep answers short and understandable.
-    4. Do NOT reveal internal reasoning.
+    3. Do NOT reveal internal reasoning.
+    4. FORMATTING: You MUST use Markdown formatting. Use bullet points for lists, **bold text** for key terms, and line breaks to separate ideas.
     
     MEDICAL CONTEXT:
     {context}
     """
 
-    print("\n[2/2] Generating response...\n")
-    print("🤖 AI: ", end="", flush=True)
+    # Insert the system rules at the very beginning of the memory
+    ai_memory.insert(0, {"role": "system", "content": system_prompt})
+
+    print("\n[2/2] Generating response from AI...\n🤖 AI: ", end="", flush=True)
+
+    # ... (Keep the rest of your try/except stream block exactly the same) ...
 
     try:
-        stream = ollama.chat(
-            model="phi3:mini",
-            messages=[
-                {"role": "system", "content": system_prompt},
-                {"role": "user", "content": user_question}
-            ],
+        # Request the stream from OpenRouter using a 100% free model
+        stream = ai_client.chat.completions.create(
+            model="openrouter/free", # You can change this model!
+            messages=ai_memory,
             stream=True
         )
 
-        full_response = ""
         for chunk in stream:
-            content = chunk["message"]["content"]
-            full_response += content
-            print(content, end="", flush=True)
+            # OpenAI's streaming format is slightly different than Ollama's
+            content = chunk.choices[0].delta.content
+            if content:
+                yield content
             
         print("\n")
-        return full_response
 
     except Exception as e:
-        print(f"\n❌ Ollama Error: {e}")
-        return "System Error: Unable to connect to the local AI engine."
+        print(f"\n❌ OpenRouter Error: {e}")
+        yield "System Error: Unable to connect to the cloud AI engine."

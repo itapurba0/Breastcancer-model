@@ -1,8 +1,8 @@
 import { useState, useRef, useEffect } from "react";
-import { Send, Bot, User, Loader2, Sparkles, ChevronDown, Activity, Check } from "lucide-react";
+import { Send, Bot, User, Loader2, Sparkles, ChevronDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 
 interface Source {
   id: number;
@@ -82,14 +82,33 @@ const SourcesPanel = ({ sources }: { sources: Source[] }) => {
 };
 
 const ChatInterface = () => {
-  const [messages, setMessages] = useState<Message[]>([
-    {
-      id: "1",
-      content: "Welcome to the ClassifierAI neural assistant hub. I am integrated with our RAG scientific indexes. I can help resolve clinical queries regarding breast cancer, diagnostic scans, and model explanations. How can I assist you today?",
-      role: "assistant",
-      timestamp: new Date(),
-    },
-  ]);
+  const [messages, setMessages] = useState<Message[]>(() => {
+    const saved = sessionStorage.getItem("classifierAIChat");
+    if (saved) {
+      // We have to turn the saved string dates back into real Date objects
+      const parsed = JSON.parse(saved);
+      return parsed.map((m: Omit<Message, "timestamp"> & { timestamp: string }) => ({
+        ...m,
+        timestamp: new Date(m.timestamp)
+      }));
+    } // <--- THIS WAS THE MISSING BRACKET!
+
+    // If no history exists, load the default welcome message
+    return [
+      {
+        id: "1",
+        content: "Welcome to the ClassifierAI neural assistant hub. I am integrated with our RAG scientific indexes. I can help resolve clinical queries regarding breast cancer, diagnostic scans, and model explanations. How can I assist you today?",
+        role: "assistant",
+        timestamp: new Date(),
+      },
+    ];
+  });
+
+  // Add this effect to auto-save every time the chat updates
+  useEffect(() => {
+    sessionStorage.setItem("classifierAIChat", JSON.stringify(messages));
+  }, [messages]);
+
   const [inputValue, setInputValue] = useState("");
   const [isTyping, setIsTyping] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -115,39 +134,78 @@ const ChatInterface = () => {
 
     setMessages((prev) => [...prev, userMessage]);
     setInputValue("");
+
+    // Turn on the cool pulsing loading dots while Qdrant searches the database
     setIsTyping(true);
 
     try {
-      // FIX 1: Updated URL to point to your local FastAPI server
+      // ---------------------------------------------------------
+      // HERE IS WHERE YOUR NEW CODE GOES! 
+      // 1. Package up the history
+      const conversationHistory = [...messages, userMessage].map((msg) => ({
+        role: msg.role,
+        content: msg.content,
+      }));
+
       const response = await fetch("http://localhost:8000/chat", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        // FIX 2: Changed 'message' to 'question' to match api.py
+        // 2. Send the full array using the 'messages' key
         body: JSON.stringify({
-          question: content.trim(),
+          messages: conversationHistory,
         }),
       });
+      // ---------------------------------------------------------
 
-      if (!response.ok) {
+      if (!response.ok || !response.body) {
         throw new Error(`API error: ${response.status}`);
       }
 
-      const data = await response.json();
+      // 1. Create a blank assistant message instantly
+      const assistantMessageId = (Date.now() + 1).toString();
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: assistantMessageId,
+          content: "", // Starts completely empty!
+          role: "assistant",
+          timestamp: new Date(),
+          sources: [],
+          status: "success",
+        },
+      ]);
 
-      const assistantMessage: Message = {
-        id: (Date.now() + 1).toString(),
-        // FIX 3: Changed data.answer to data.reply
-        content: data.reply,
-        role: "assistant",
-        timestamp: new Date(),
-        // We will pass the sources from the backend here next!
-        sources: data.sources || [],
-        status: data.status || "success",
-      };
+      // 2. Hide the pulsing dots because the AI is about to start typing
+      setIsTyping(false);
 
-      setMessages((prev) => [...prev, assistantMessage]);
+      // 3. Open the "catcher's mitt" (The Streams API)
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder("utf-8");
+      let done = false;
+      let streamedText = "";
+
+      // 4. Read the text chunk-by-chunk as it arrives from Python
+      while (!done) {
+        const { value, done: readerDone } = await reader.read();
+        done = readerDone;
+
+        if (value) {
+          // Decode the raw bytes into a readable string chunk
+          const chunk = decoder.decode(value, { stream: true });
+          streamedText += chunk;
+
+          // Reactively update ONLY the new assistant message with the growing text
+          setMessages((prev) =>
+            prev.map((msg) =>
+              msg.id === assistantMessageId
+                ? { ...msg, content: streamedText }
+                : msg
+            )
+          );
+        }
+      }
     } catch (error) {
       console.error("Chat error:", error);
 
@@ -161,8 +219,7 @@ const ChatInterface = () => {
       };
 
       setMessages((prev) => [...prev, errorMessage]);
-    } finally {
-      setIsTyping(false);
+      setIsTyping(false); // Turn off the loading dots if it crashes
     }
   };
 

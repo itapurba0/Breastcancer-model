@@ -1,8 +1,9 @@
 
 from fastapi import FastAPI, File, UploadFile, HTTPException # type: ignore
 from fastapi.middleware.cors import CORSMiddleware # type: ignore
+from fastapi.responses import StreamingResponse
 import os
-from typing import Dict
+from typing import Dict,List
 
 from pydantic import BaseModel
 import uvicorn
@@ -88,22 +89,22 @@ async def predict(file: UploadFile = File(...)):
     except Exception as e:
         raise HTTPException(status_code=503, detail=f"Model not loaded locally and proxy failed: {e}")
 
+class MessageItem(BaseModel):
+    role: str
+    content: str
 
+# 2. Tell the API to expect a LIST of those messages
 class ChatRequest(BaseModel):
-    question: str
-
+    messages: List[MessageItem]
 
 @app.post("/chat")
 async def chat_endpoint(request: ChatRequest):
     try:
         # Pass the question from React to your RAG engine
-        bot_reply = generate_rag_response(request.question)
-        
-        # Send the final string back to the React frontend
-        return {
-            "reply": bot_reply,
-            "status": "success"
-        }
+       return StreamingResponse(
+        generate_rag_response(request.messages), 
+        media_type="text/plain"
+        )
     except Exception as e:
         print(f"API Error: {e}")
         raise HTTPException(status_code=500, detail="Internal Server Error")
