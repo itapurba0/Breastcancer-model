@@ -3,6 +3,7 @@ import { Send, Bot, User, Loader2, Sparkles, ChevronDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { motion } from "framer-motion";
+import ReactMarkdown from "react-markdown"; // <--- NEW IMPORT
 
 interface Source {
   id: number;
@@ -85,15 +86,13 @@ const ChatInterface = () => {
   const [messages, setMessages] = useState<Message[]>(() => {
     const saved = sessionStorage.getItem("classifierAIChat");
     if (saved) {
-      // We have to turn the saved string dates back into real Date objects
       const parsed = JSON.parse(saved);
       return parsed.map((m: Omit<Message, "timestamp"> & { timestamp: string }) => ({
         ...m,
         timestamp: new Date(m.timestamp)
       }));
-    } // <--- THIS WAS THE MISSING BRACKET!
+    }
 
-    // If no history exists, load the default welcome message
     return [
       {
         id: "1",
@@ -104,7 +103,6 @@ const ChatInterface = () => {
     ];
   });
 
-  // Add this effect to auto-save every time the chat updates
   useEffect(() => {
     sessionStorage.setItem("classifierAIChat", JSON.stringify(messages));
   }, [messages]);
@@ -134,14 +132,9 @@ const ChatInterface = () => {
 
     setMessages((prev) => [...prev, userMessage]);
     setInputValue("");
-
-    // Turn on the cool pulsing loading dots while Qdrant searches the database
     setIsTyping(true);
 
     try {
-      // ---------------------------------------------------------
-      // HERE IS WHERE YOUR NEW CODE GOES! 
-      // 1. Package up the history
       const conversationHistory = [...messages, userMessage].map((msg) => ({
         role: msg.role,
         content: msg.content,
@@ -152,24 +145,21 @@ const ChatInterface = () => {
         headers: {
           "Content-Type": "application/json",
         },
-        // 2. Send the full array using the 'messages' key
         body: JSON.stringify({
           messages: conversationHistory,
         }),
       });
-      // ---------------------------------------------------------
 
       if (!response.ok || !response.body) {
         throw new Error(`API error: ${response.status}`);
       }
 
-      // 1. Create a blank assistant message instantly
       const assistantMessageId = (Date.now() + 1).toString();
       setMessages((prev) => [
         ...prev,
         {
           id: assistantMessageId,
-          content: "", // Starts completely empty!
+          content: "",
           role: "assistant",
           timestamp: new Date(),
           sources: [],
@@ -177,26 +167,21 @@ const ChatInterface = () => {
         },
       ]);
 
-      // 2. Hide the pulsing dots because the AI is about to start typing
       setIsTyping(false);
 
-      // 3. Open the "catcher's mitt" (The Streams API)
       const reader = response.body.getReader();
       const decoder = new TextDecoder("utf-8");
       let done = false;
       let streamedText = "";
 
-      // 4. Read the text chunk-by-chunk as it arrives from Python
       while (!done) {
         const { value, done: readerDone } = await reader.read();
         done = readerDone;
 
         if (value) {
-          // Decode the raw bytes into a readable string chunk
           const chunk = decoder.decode(value, { stream: true });
           streamedText += chunk;
 
-          // Reactively update ONLY the new assistant message with the growing text
           setMessages((prev) =>
             prev.map((msg) =>
               msg.id === assistantMessageId
@@ -219,7 +204,7 @@ const ChatInterface = () => {
       };
 
       setMessages((prev) => [...prev, errorMessage]);
-      setIsTyping(false); // Turn off the loading dots if it crashes
+      setIsTyping(false);
     }
   };
 
@@ -232,7 +217,7 @@ const ChatInterface = () => {
 
   return (
     <div className="flex flex-col h-[calc(100vh-12rem)] max-h-[700px] glass-panel rounded-3xl border border-brand/10 soft-shadow-lg overflow-hidden bg-white">
-      {/* 1. Header (frosted pill top) */}
+      {/* Header */}
       <div className="px-6 py-4 border-b border-brand/8 bg-white flex items-center justify-between">
         <div className="flex items-center gap-3">
           <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-white border border-brand/10 soft-shadow-sm">
@@ -251,7 +236,7 @@ const ChatInterface = () => {
         </div>
       </div>
 
-      {/* 2. Messages Display Area */}
+      {/* Messages Display Area */}
       <div className="flex-1 overflow-y-auto p-6 space-y-6 bg-white">
         {messages.map((message) => (
           <motion.div
@@ -287,23 +272,49 @@ const ChatInterface = () => {
                   : "bg-white text-foreground border-brand/10 rounded-tl-sm soft-shadow-sm"
               )}
             >
-              {/* Highlight glowing border for assistant */}
               {message.role === "assistant" && (
                 <div className="absolute -left-[1px] top-0 bottom-0 w-[2px] bg-gradient-to-b from-brand to-transparent rounded-l" />
               )}
 
-              <p className="text-xs md:text-sm whitespace-pre-wrap leading-relaxed font-sans">
-                {message.content}
-              </p>
+              {/* NEW MARKDOWN RENDERER */}
+              {message.role === "user" ? (
+                <p className="text-xs md:text-sm whitespace-pre-wrap leading-relaxed font-sans">
+                  {message.content}
+                </p>
+              ) : message.content === "" ? (
+                /* ⏳ Show bouncing dots while waiting for the first word from OpenRouter */
+                <div className="flex items-center gap-1.5 py-2 px-1">
+                  <div className="w-1.5 h-1.5 rounded-full bg-brand/60 animate-pulse" style={{ animationDelay: "0ms" }} />
+                  <div className="w-1.5 h-1.5 rounded-full bg-brand/60 animate-pulse" style={{ animationDelay: "150ms" }} />
+                  <div className="w-1.5 h-1.5 rounded-full bg-brand/60 animate-pulse" style={{ animationDelay: "300ms" }} />
+                </div>
+              ) : (
+                  <div className="text-xs md:text-sm leading-relaxed font-sans space-y-3">
+                    <ReactMarkdown
+                      components={{
+                        p: ({ node, ...props }) => <p className="whitespace-pre-wrap" {...props} />,
+                        ul: ({ node, ...props }) => <ul className="list-disc pl-5 space-y-1" {...props} />,
+                        ol: ({ node, ...props }) => <ol className="list-decimal pl-5 space-y-1" {...props} />,
+                        li: ({ node, ...props }) => <li className="pl-1 marker:text-brand/70" {...props} />,
+                        strong: ({ node, ...props }) => <strong className="font-semibold text-foreground" {...props} />,
+                        h1: ({ node, ...props }) => <h1 className="text-lg font-bold mb-2 mt-4" {...props} />,
+                        h2: ({ node, ...props }) => <h2 className="text-base font-bold mb-2 mt-4" {...props} />,
+                        h3: ({ node, ...props }) => <h3 className="text-sm font-bold mb-2 mt-3" {...props} />,
+                      }}
+                    >
+                      {message.content}
+                    </ReactMarkdown>
+                  </div>
+              )}
 
-              {/* RAG citations Accordion */}
               {message.role === "assistant" && message.sources && (
                 <SourcesPanel sources={message.sources} />
               )}
 
               <p
                 className={cn(
-                  "text-[9px] mt-2 font-mono tracking-wide text-muted-foreground"
+                  "text-[9px] mt-2 font-mono tracking-wide text-muted-foreground",
+                  message.role === "user" ? "text-right" : "text-left"
                 )}
               >
                 {message.timestamp.toLocaleTimeString([], {
@@ -333,7 +344,7 @@ const ChatInterface = () => {
         <div ref={messagesEndRef} />
       </div>
 
-      {/* 3. Suggested Prompt Shortcuts */}
+      {/* Suggested Prompt Shortcuts */}
       {messages.length === 1 && (
         <div className="px-6 pb-4 pt-2">
           <p className="text-[10px] text-muted-foreground mb-3 flex items-center gap-1.5 font-mono">
@@ -354,7 +365,7 @@ const ChatInterface = () => {
         </div>
       )}
 
-      {/* 4. Frosted Input Console */}
+      {/* Frosted Input Console */}
       <div className="p-6 border-t border-brand/8 bg-white">
         <div className="flex items-end gap-4">
           <div className="flex-1 relative">
