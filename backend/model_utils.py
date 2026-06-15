@@ -3,15 +3,15 @@ import io
 import json
 import logging
 import base64
-import cv2
+import cv2 # type: ignore
 
 os.environ.setdefault("TF_CPP_MIN_LOG_LEVEL", "2")  # suppress TF info/warnings
 os.environ.setdefault("CUDA_VISIBLE_DEVICES", "")  # hide GPUs from TF so it won't try to load CUDA libs
 logging.getLogger("tensorflow").setLevel(logging.ERROR)
 from typing import Tuple, Dict, Optional
 
-import numpy as np
-from PIL import Image
+import numpy as np # type: ignore
+from PIL import Image # type: ignore
 
 SUPPRESS_CUDA_WARNINGS = True
 

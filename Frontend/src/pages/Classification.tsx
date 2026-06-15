@@ -47,7 +47,7 @@ const Classification = () => {
           className="space-y-12"
         >
           {/* Frosted Heading Panel */}
-          <div className="glass-panel rounded-[2rem] p-8 md:p-10 text-center space-y-5 border border-[#78909C]/15 shadow-md relative overflow-hidden">
+          {/* <div className="glass-panel rounded-[2rem] p-8 md:p-10 text-center space-y-5 border border-[#78909C]/15 shadow-md relative overflow-hidden">
             <div className="absolute -top-24 -left-24 w-48 h-48 bg-[#FFE082]/5 rounded-full blur-2xl pointer-events-none" />
 
             <h1 className="text-3xl md:text-5xl font-extrabold text-[#455A64] tracking-[-0.03em] font-heading leading-tight">
@@ -58,7 +58,7 @@ const Classification = () => {
               The system classifies tissue, generates visual gradient heatmaps, and computes risk parameters.
             </p>
 
-            {/* Benefits pill bar */}
+            
             <div className="flex flex-wrap items-center justify-center gap-3 mt-6 pt-5 border-t border-slate-100">
               {benefits.map((benefit, index) => {
                 const Icon = benefit.icon;
@@ -73,7 +73,7 @@ const Classification = () => {
                 );
               })}
             </div>
-          </div>
+          </div>*/}
 
           {/* Refined Upload Terminal */}
           <ImageUploader />

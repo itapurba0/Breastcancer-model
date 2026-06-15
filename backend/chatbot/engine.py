@@ -291,7 +291,7 @@ import warnings
 from qdrant_client import QdrantClient
 from fastembed import TextEmbedding  
 import ollama
-from openai import OpenAI
+from openai import AsyncOpenAI
 
 try:
     from dotenv import load_dotenv
@@ -321,7 +321,7 @@ except Exception as e:
     print(f"❌ Qdrant Connection Error: {e}")
     qdrant = None
 
-ai_client = OpenAI(
+ai_client = AsyncOpenAI(
     base_url="https://openrouter.ai/api/v1",
     api_key=OPENROUTER_API_KEY,
 )
@@ -357,23 +357,19 @@ def retrieve_context(user_question: str, top_k: int = 1):
         return ""
 
 # Change the function to act as a generator
-def generate_rag_response(messages):
+# 3. NEW: Add 'async' to the function definition
+async def generate_rag_response(messages):
     # --- BULLETPROOF DATA EXTRACTION ---
-    # 1. If it accidentally received a string, just use it directly
     if isinstance(messages, str):
         latest_user_question = messages
         ai_memory = [{"role": "user", "content": messages}]
     else:
-        # 2. Grab the last message from the list safely
         last_msg = messages[-1]
-        
-        # 3. Check if FastAPI sent it as a dictionary or a Pydantic object
         if isinstance(last_msg, dict):
             latest_user_question = last_msg.get("content", "")
         else:
             latest_user_question = getattr(last_msg, "content", str(last_msg))
 
-        # 4. Build the memory array safely
         ai_memory = []
         for msg in messages:
             if isinstance(msg, dict):
@@ -383,6 +379,7 @@ def generate_rag_response(messages):
     # ------------------------------------
 
     print(f"\n[1/2] Retrieving context for: '{latest_user_question}'...")
+   
     context = retrieve_context(latest_user_question)
 
     if not context.strip():
@@ -403,25 +400,25 @@ def generate_rag_response(messages):
     {context}
     """
 
-    # Insert the system rules at the very beginning of the memory
     ai_memory.insert(0, {"role": "system", "content": system_prompt})
 
     print("\n[2/2] Generating response from AI...\n🤖 AI: ", end="", flush=True)
 
-    # ... (Keep the rest of your try/except stream block exactly the same) ...
-
     try:
-        # Request the stream from OpenRouter using a 100% free model
-        stream = ai_client.chat.completions.create(
-            model="openrouter/free", # You can change this model!
+        # 4. NEW: Add 'await' so Python knows it can handle other users while OpenRouter thinks
+        # Request the stream with strict consistency parameters
+        stream = await ai_client.chat.completions.create(
+            model="openai/gpt-oss-120b:free", # 1. Force a specific model instead of openrouter/free
             messages=ai_memory,
+            temperature=0.0, # 2. NEW: Drops randomness to absolute zero
             stream=True
         )
 
-        for chunk in stream:
-            # OpenAI's streaming format is slightly different than Ollama's
+        # 5. NEW: Change 'for' to 'async for' to handle the asynchronous stream
+        async for chunk in stream:
             content = chunk.choices[0].delta.content
             if content:
+                print(content, end="", flush=True)
                 yield content
             
         print("\n")
