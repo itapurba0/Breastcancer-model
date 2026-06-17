@@ -35,6 +35,7 @@ const ImageUploader = () => {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [isDragging, setIsDragging] = useState(false);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [analysisStep, setAnalysisStep] = useState(-1);
   const [result, setResult] = useState<ClassificationResult | null>(null);
 
   // Report Generation States
@@ -102,6 +103,12 @@ const ImageUploader = () => {
     setReportStep("hidden");
 
     try {
+      const steps = [0, 1, 2, 3];
+      for (const step of steps) {
+        await new Promise(r => setTimeout(r, 600));
+        setAnalysisStep(step);
+      }
+
       const formData = new FormData();
       formData.append("file", selectedFile, selectedFile.name);
 
@@ -141,6 +148,7 @@ const ImageUploader = () => {
       });
     } finally {
       setIsAnalyzing(false);
+      setAnalysisStep(-1);
     }
   };
 
@@ -154,17 +162,17 @@ const ImageUploader = () => {
         whileHover={{ y: -4, scale: 1.01 }}
         transition={{ type: "tween", ease: "easeOut", duration: 0.35 }}
         className={cn(
-          "glass-panel rounded-3xl p-8 overflow-hidden relative transition-transform duration-300 bg-white print:hidden",
-          isDragging ? "border-highlight bg-muted/50 soft-shadow-md" : "border-brand/15 hover:border-brand/40",
+          "glass-panel rounded-3xl p-8 overflow-hidden relative transition-transform duration-300 bg-white print:hidden min-h-[280px]",
+          isDragging ? "border-primary/40 bg-primary/5 soft-shadow-md" : "border-brand/15 hover:border-brand/40",
           selectedImage && "border-brand/25"
         )}
       >
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-48 h-48 bg-[#FFE082]/5 rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-48 h-48 bg-primary/5 rounded-full blur-3xl pointer-events-none" />
 
         {!selectedImage ? (
           <div className="flex flex-col items-center gap-6 py-8 sm:py-12 relative z-10">
-            <div className="flex h-16 w-16 sm:h-20 sm:w-20 items-center justify-center rounded-3xl bg-muted border border-brand/20 soft-shadow-sm group transition-transform duration-500 hover:scale-105 hover:bg-secondary/10">
-              <Upload className="h-7 w-7 sm:h-9 sm:w-9 text-brand stroke-[2px]" />
+            <div className="flex h-16 w-16 sm:h-20 sm:w-20 items-center justify-center rounded-full bg-primary/10 border-primary/20 soft-shadow-sm group transition-transform duration-500 hover:scale-105 hover:bg-secondary/10">
+              <Microscope className="h-7 w-7 sm:h-9 sm:w-9 text-primary stroke-[2px]" />
             </div>
             <div className="text-center space-y-2">
               <h2 className="text-lg sm:text-xl font-bold text-foreground font-heading tracking-tight">
@@ -180,8 +188,8 @@ const ImageUploader = () => {
               onChange={handleFileSelect}
               className="absolute inset-0 w-full h-full opacity-0 cursor-pointer min-h-[44px]"
             />
-            <div className="flex items-center gap-2 px-4 py-1.5 rounded-full bg-muted border border-brand/15 text-[10px] sm:text-xs text-muted-foreground font-mono font-bold">
-              <ImageIcon className="h-3.5 w-3.5 text-brand" />
+            <div className="flex items-center gap-2 px-4 py-1.5 rounded-full bg-muted border border-brand/15 text-xs text-muted-foreground">
+              <ImageIcon className="h-3.5 w-3.5 text-primary" />
               <span>Supports: JPEG, PNG</span>
             </div>
           </div>
@@ -214,7 +222,7 @@ const ImageUploader = () => {
             </div>
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-t border-brand/10 pt-5">
               <p className="text-xs sm:text-sm text-muted-foreground font-mono truncate max-w-full sm:max-w-[280px] font-bold">
-                FILE: {selectedFile?.name}
+                {selectedFile?.name}
               </p>
               <Button
                 onClick={analyzeImage}
@@ -236,30 +244,25 @@ const ImageUploader = () => {
       <AnimatePresence>
         {isAnalyzing && (
           <motion.div
-            initial={{ opacity: 0, y: 15, filter: "blur(5px)" }}
-            animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
-            exit={{ opacity: 0, y: -15, filter: "blur(5px)" }}
-            transition={{ duration: 0.45, ease: "easeOut" }}
-            className="glass-panel rounded-3xl p-6 border border-brand/15 soft-shadow-md relative overflow-hidden bg-white print:hidden"
+            initial={{ opacity: 0, y: 15 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -15 }}
+            className="glass-panel rounded-3xl p-6 border border-primary/10 bg-white"
           >
-            <div className="flex items-center gap-4 relative z-10">
-              <div className="relative flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-white border border-brand/15 soft-shadow-sm">
-                <motion.div
-                  animate={{ rotate: 360 }}
-                  transition={{ repeat: Infinity, duration: 3, ease: "linear" }}
-                  className="absolute inset-1 border-t-2 border-r-2 border-brand rounded-2xl"
-                />
-                <Activity className="h-5 w-5 text-brand" />
-              </div>
-              <div className="flex-1">
-                <div className="flex justify-between items-center mb-1">
-                  <p className="font-bold text-foreground font-heading text-sm">Image analysis</p>
-                  <span className="text-xs font-bold text-foreground bg-secondary/30 border border-secondary/60 px-3 py-0.5 rounded-full animate-pulse uppercase tracking-wider font-mono">Analyzing</span>
+            <div className="space-y-3">
+              {["Receiving image", "Processing neural layers", "Generating heatmap", "Compiling results"].map((step, i) => (
+                <div key={step} className="flex items-center gap-3">
+                  <div className={cn(
+                    "flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-xs font-bold",
+                    analysisStep > i ? "bg-primary text-white" : analysisStep === i ? "bg-primary/10 text-primary animate-pulse" : "bg-muted text-muted-foreground"
+                  )}>
+                    {analysisStep > i ? "\u2713" : i + 1}
+                  </div>
+                  <span className={cn("text-sm font-sans", analysisStep >= i ? "text-foreground" : "text-muted-foreground")}>
+                    {step}
+                  </span>
                 </div>
-                <p className="text-sm text-muted-foreground font-sans leading-relaxed font-semibold">
-                  Mapping visual tissue saliencies & processing deep layers...
-                </p>
-              </div>
+              ))}
             </div>
           </motion.div>
         )}
@@ -289,13 +292,6 @@ const ImageUploader = () => {
                   const isNormal = result.prediction.toLowerCase().includes("normal");
                   const isBenign = result.prediction.toLowerCase().includes("benign");
 
-                  let accentColor = "text-red-700 border-red-200 bg-red-50/70";
-                  if (isNormal) {
-                    accentColor = "text-foreground border-brand/20 bg-brand/10";
-                  } else if (isBenign) {
-                    accentColor = "text-accent-foreground border-sage/80 bg-sage/80";
-                  }
-
                   let badgeClass = "bg-secondary text-secondary-foreground";
                   if (isNormal) {
                     badgeClass = "bg-muted text-muted-foreground";
@@ -304,81 +300,72 @@ const ImageUploader = () => {
                   }
 
                   return (
-                    <>
-                      <div className={cn("flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl border", accentColor)}>
-                        {isNormal || isBenign ? <CheckCircle className="h-6 w-6 stroke-[2px]" /> : <AlertCircle className="h-6 w-6 stroke-[2px]" />}
+                    <div className="flex items-start gap-4 p-5 rounded-2xl border-l-4 border-l-primary bg-primary/5 w-full">
+                      <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-primary/10">
+                        {isNormal || isBenign ? <CheckCircle className="h-6 w-6 text-primary" /> : <AlertCircle className="h-6 w-6 text-secondary" />}
                       </div>
-                      <div className="flex-1 space-y-4">
-                        <div className="flex flex-wrap items-center gap-3">
-                          <span className="text-xs font-mono text-muted-foreground uppercase tracking-widest font-bold">Diagnostic prediction</span>
-                          <Badge className={cn("text-sm font-bold", badgeClass)}>
-                            {result.prediction}
-                          </Badge>
-                          {!isFailed && (
-                            <div className="w-full max-w-xs space-y-1">
-                              <span className="text-xs font-mono text-muted-foreground font-bold">{result.confidence}% confidence</span>
-                              <div className="h-2 rounded-full bg-muted overflow-hidden">
-                                <div className="h-full bg-primary rounded-full transition-all" style={{ width: `${result.confidence}%` }} />
-                              </div>
-                            </div>
-                          )}
+                      <div className="flex-1 space-y-3">
+                        <div>
+                          <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Diagnostic result</p>
+                          <div className="flex items-center gap-3 mt-1">
+                            <Badge className={cn("text-sm font-bold", badgeClass)}>
+                              {result.prediction}
+                            </Badge>
+                          </div>
                         </div>
+                        {!isFailed && (
+                          <div className="space-y-1.5">
+                            <div className="flex items-center justify-between">
+                              <span className="text-xs text-muted-foreground">Confidence</span>
+                              <span className="text-xs font-semibold text-foreground">{result.confidence}%</span>
+                            </div>
+                            <div className="h-2 rounded-full bg-muted overflow-hidden">
+                              <div className="h-full bg-primary rounded-full transition-all duration-700" style={{ width: `${result.confidence}%` }} />
+                            </div>
+                          </div>
+                        )}
                       </div>
-                    </>
+                    </div>
                   );
                 })()}
               </div>
 
               {reportStep === "hidden" && (
                 <>
-                  <div className="flex flex-col items-center justify-center gap-4 w-full">
-                    <div className="w-full max-w-xl glass-panel rounded-3xl p-4 sm:p-6 border border-brand/15 shadow-sm bg-muted/30 flex flex-col gap-4">
-                      <span className="text-xs font-mono text-muted-foreground uppercase tracking-widest flex items-center justify-center gap-2 font-bold">
-                        <Sparkles className="h-4 w-4 text-brand animate-pulse" />
-                        Explainable Grad-CAM map
-                      </span>
-                      <div className="overflow-hidden rounded-2xl bg-muted/50 flex items-center justify-center h-64 sm:h-80 border border-brand/10 relative shadow-inner">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <p className="text-xs font-medium text-muted-foreground">Original scan</p>
+                      <div className="rounded-2xl overflow-hidden bg-muted/50 flex items-center justify-center aspect-square border border-primary/10">
+                        <img src={selectedImage!} alt="Original scan" className="max-h-full max-w-full object-contain" />
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      <p className="text-xs font-medium text-muted-foreground">Activation heatmap</p>
+                      <div className="rounded-2xl overflow-hidden bg-muted/50 flex items-center justify-center aspect-square border border-primary/10 relative">
                         {result.gradcam ? (
-                          <img
-                            src={result.gradcam}
-                            alt="Tissue activation heatmap mapping"
-                            className="max-h-full max-w-full object-contain mix-blend-multiply"
-                          />
+                          <img src={result.gradcam} alt="Heatmap" className="max-h-full max-w-full object-contain mix-blend-multiply" />
                         ) : (
-                          <div className="px-4 text-center text-sm text-muted-foreground font-sans font-semibold">
-                            Grad-CAM explanation mapping is not available.
-                          </div>
+                          <p className="text-xs text-muted-foreground p-4 text-center">Heatmap not available for this image</p>
                         )}
-                        <div className="absolute bottom-3 left-3 px-3 py-1 rounded-full bg-white/90 backdrop-blur-sm text-[10px] font-mono text-foreground border border-brand/20 font-bold shadow-sm">
-                          Heatmap saliency view
-                        </div>
                       </div>
                     </div>
                   </div>
 
                   {result.triage && (
-                    <div className="p-5 sm:p-8 rounded-[2rem] bg-muted/30 border border-brand/10 space-y-4">
-                      <div className="flex items-center justify-between border-b border-brand/10 pb-3">
-                        <span className="text-xs font-mono text-muted-foreground uppercase tracking-widest font-bold">Risk triage index</span>
+                    <div className="report-triage rounded-2xl">
+                      <div className="flex items-center justify-between mb-3">
+                        <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Risk assessment</span>
                         <span className={cn(
-                          "px-3 py-1 rounded-full text-xs font-mono font-bold uppercase tracking-wider",
-                          result.triage.tier === "high concern"
-                            ? "bg-red-50 text-red-700 border border-red-200"
-                            : result.triage.tier === "moderate confidence"
-                              ? "bg-amber-50 text-amber-800 border border-amber-200"
-                              : "bg-muted text-foreground border border-brand/25"
+                          "px-3 py-1 rounded-full text-xs font-semibold",
+                          result.triage.tier === "high concern" ? "bg-red-50 text-red-700 border border-red-200" :
+                          result.triage.tier === "moderate confidence" ? "bg-amber-50 text-amber-700 border border-amber-200" :
+                          "bg-primary/10 text-primary border border-primary/20"
                         )}>
                           {result.triage.tier}
                         </span>
                       </div>
-                      <div className="space-y-2">
-                        <h4 className="text-sm md:text-base font-bold text-foreground font-heading tracking-tight leading-snug">
-                          Recommendation: {result.triage.recommendation}
-                        </h4>
-                        <p className="text-sm md:text-base text-muted-foreground leading-relaxed font-sans font-semibold">
-                          {result.triage.rationale}
-                        </p>
-                      </div>
+                      <p className="text-sm font-semibold text-foreground mb-1">{result.triage.recommendation}</p>
+                      <p className="text-sm text-muted-foreground">{result.triage.rationale}</p>
                     </div>
                   )}
                 </>
@@ -394,10 +381,10 @@ const ImageUploader = () => {
                   </div>
                   <Button
                     onClick={() => setReportStep("form")}
-                    className="w-full sm:w-auto bg-foreground text-white hover:bg-foreground/90 rounded-full font-mono text-xs px-6 py-5 soft-shadow-sm flex items-center gap-2"
+                    className="w-full sm:w-auto bg-primary text-white hover:bg-primary/90 rounded-full text-sm px-6 py-5 soft-shadow-sm flex items-center gap-2"
                   >
                     <FileText className="h-4 w-4" />
-                    GENERATE CLINICAL REPORT
+                    Export clinical report
                   </Button>
                 </div>
               )}
@@ -432,9 +419,9 @@ const ImageUploader = () => {
                       </div>
                     </div>
                     <div className="flex justify-end gap-3 pt-4">
-                      <Button variant="outline" onClick={() => setReportStep("hidden")} className="rounded-full text-xs font-mono">CANCEL</Button>
-                      <Button onClick={() => setReportStep("preview")} className="rounded-full bg-brand hover:bg-brand/90 text-white text-xs font-mono flex items-center gap-2">
-                        <FileOutput className="h-4 w-4" /> COMPILE REPORT
+                      <Button variant="outline" onClick={() => setReportStep("hidden")} className="rounded-full text-xs">Cancel</Button>
+                      <Button onClick={() => setReportStep("preview")} className="rounded-full bg-primary hover:bg-primary/90 text-white text-xs flex items-center gap-2">
+                        <FileOutput className="h-4 w-4" /> Generate report
                       </Button>
                     </div>
                   </motion.div>
@@ -448,8 +435,9 @@ const ImageUploader = () => {
                 <motion.div
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
-                  className="report-preview bg-white rounded-none md:rounded-2xl border-t-4 border-t-foreground shadow-sm border border-brand/10 p-6 sm:p-8 md:p-12 print:p-0 print:border-none print:shadow-none font-sans"
+                  className="report-preview bg-white rounded-none md:rounded-2xl border-t-4 border-t-primary shadow-sm border border-brand/10 p-6 sm:p-8 md:p-12 print:p-0 print:border-none print:shadow-none font-sans"
                 >
+                  <div className="report-accent-bar" />
                   <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8 pb-4 border-b border-dashed border-brand/20 print:hidden">
                     <span className="text-xs font-mono font-bold text-muted-foreground">Document preview</span>
                     <div className="flex gap-3">
@@ -462,11 +450,12 @@ const ImageUploader = () => {
 
                   <div className="flex flex-col sm:flex-row justify-between items-start gap-4 mb-8 report-section">
                     <div>
-                      <h1 className="report-heading text-xl sm:text-2xl font-black text-foreground uppercase tracking-tight">AI Diagnostic Scan Report</h1>
-                      <p className="report-subheading text-sm text-muted-foreground font-mono mt-1">Generated: {new Date().toLocaleDateString()} {new Date().toLocaleTimeString()}</p>
+                      <p className="text-xs text-primary font-semibold uppercase tracking-wider mb-1">Breast Cancer Companion</p>
+                      <h1 className="report-heading text-xl sm:text-2xl font-black text-foreground tracking-tight">AI-Assisted Diagnostic Report</h1>
+                      <p className="report-subheading text-sm text-muted-foreground mt-1">Generated: {new Date().toLocaleDateString()} {new Date().toLocaleTimeString()}</p>
                     </div>
                     <div className="text-left sm:text-right">
-                      <div className="inline-block px-4 py-2 border-2 border-foreground text-foreground font-bold uppercase tracking-widest rounded-lg">
+                      <div className="inline-block px-4 py-2 border-2 border-primary text-primary font-bold uppercase tracking-widest rounded-lg">
                         {result.prediction}
                       </div>
                     </div>
@@ -527,20 +516,20 @@ const ImageUploader = () => {
                     )}
                   </div>
 
-                  <div className="report-disclaimer mt-8 sm:mt-12 p-4 border-2 border-red-200 bg-red-50 rounded-xl break-inside-avoid">
+                  <div className="report-disclaimer mt-8 sm:mt-12 p-4 border border-primary/20 bg-primary/5 rounded-xl break-inside-avoid">
                     <div className="flex gap-3 items-start">
-                      <AlertCircle className="h-6 w-6 text-red-600 shrink-0" />
+                      <AlertCircle className="h-6 w-6 text-primary shrink-0" />
                       <div>
-                        <h4 className="report-body text-sm font-bold text-red-800 uppercase tracking-wide">Strict Clinical Disclaimer</h4>
-                        <p className="report-body text-xs text-red-700 mt-1 leading-relaxed font-semibold">
+                        <h4 className="report-body text-sm font-bold text-foreground uppercase tracking-wide">Clinical Disclaimer</h4>
+                        <p className="report-body text-xs text-muted-foreground mt-1 leading-relaxed font-semibold">
                           This document is generated by an Artificial Intelligence experimental model. It is <span className="font-black underline">NOT</span> a medical diagnosis. The predictions, heatmaps, and triage recommendations provided are strictly for educational and investigational aid. All findings MUST be reviewed, validated, and officially diagnosed by a board-certified radiologist or oncologist before any clinical decisions are made. Do not alter treatment plans based solely on this automated report.
                         </p>
                       </div>
                     </div>
                   </div>
 
-                  <div className="mt-12 sm:mt-16 pt-8 border-t border-brand/20 flex justify-between items-end break-inside-avoid hidden print:flex">
-                    <div className="report-body text-xs text-brand">Ref System ID: {Math.random().toString(36).substr(2, 9).toUpperCase()}</div>
+                  <div className="report-signature mt-12 sm:mt-16 pt-8 border-t border-brand/20 flex justify-between items-end break-inside-avoid hidden print:flex">
+                    <div className="report-body text-xs text-primary">Ref: BCC-{new Date().toISOString().slice(0,10).replace(/-/g,'')}-{new Date().toISOString().slice(11,19).replace(/:/g,'')}</div>
                     <div className="text-center">
                       <div className="w-48 border-b border-foreground mb-2"></div>
                       <span className="report-body text-xs font-bold text-muted-foreground">Reviewing Physician Signature</span>
