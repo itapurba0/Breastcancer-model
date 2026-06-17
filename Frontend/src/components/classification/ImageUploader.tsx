@@ -1,6 +1,6 @@
 import { useState, useCallback } from "react";
 import {
-  X, Image as ImageIcon, Loader2, AlertCircle, CheckCircle,
+  X, Image as ImageIcon, Loader2, AlertCircle, AlertTriangle, CheckCircle,
   Microscope, Activity, ShieldCheck, FileText, Printer, User, FileOutput,
   Eye
 } from "lucide-react";
@@ -9,12 +9,14 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
+import FacilityRecommendation from "./FacilityRecommendation";
 
 interface ClassificationResult {
   prediction: string;
   confidence: number;
   details: string;
   gradcam?: string;
+  inconclusive?: boolean;
   triage?: {
     tier: string;
     recommendation: string;
@@ -138,6 +140,7 @@ const ImageUploader = () => {
         confidence: normalizedConfidence,
         details: json.details ?? JSON.stringify(json),
         gradcam: json.gradcam_image,
+        inconclusive: json.inconclusive ?? false,
         triage: json.triage,
       });
     } catch (err) {
@@ -289,6 +292,7 @@ const ImageUploader = () => {
               <div className="flex flex-col md:flex-row items-center gap-6 border-b border-brand/10 pb-8">
                 {(() => {
                   const isFailed = result.prediction.toLowerCase().includes("fail");
+                  const isInconclusive = result.inconclusive ?? false;
                   const isNormal = result.prediction.toLowerCase().includes("normal");
                   const isBenign = result.prediction.toLowerCase().includes("benign");
 
@@ -296,9 +300,10 @@ const ImageUploader = () => {
                     normal:  { gauge: "#22c55e", bg: "bg-emerald-50", text: "text-emerald-700", border: "border-emerald-200", triage: "border-l-emerald-500" },
                     benign:  { gauge: "#3b82f6", bg: "bg-blue-50", text: "text-blue-700", border: "border-blue-200", triage: "border-l-blue-500" },
                     malignant: { gauge: "#ef4444", bg: "bg-red-50", text: "text-red-700", border: "border-red-200", triage: "border-l-red-500" },
+                    inconclusive: { gauge: "#f59e0b", bg: "bg-amber-50", text: "text-amber-700", border: "border-amber-200", triage: "border-l-amber-500" },
                     failed:  { gauge: "#9ca3af", bg: "bg-muted", text: "text-muted-foreground", border: "border-muted-foreground/20", triage: "border-l-muted-foreground" },
                   };
-                  const colors = isFailed ? colorMap.failed : isNormal ? colorMap.normal : isBenign ? colorMap.benign : colorMap.malignant;
+                  const colors = isFailed ? colorMap.failed : isInconclusive ? colorMap.inconclusive : isNormal ? colorMap.normal : isBenign ? colorMap.benign : colorMap.malignant;
                   const circumference = 2 * Math.PI * 36;
                   const dashOffset = circumference - (result.confidence / 100) * circumference;
 
@@ -335,13 +340,21 @@ const ImageUploader = () => {
                               "text-base font-heading font-bold tracking-tight px-3 py-1 rounded-lg border",
                               colors.bg, colors.text, colors.border
                             )}>
-                              {result.prediction}
+                              {isInconclusive ? result.prediction.replace("inconclusive", "Inconclusive") : result.prediction}
                             </span>
+                            {isInconclusive && (
+                              <span className="text-xs font-semibold text-amber-600 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded-full">
+                                Uncertain
+                              </span>
+                            )}
                           </div>
                         </div>
                         {!isFailed && (
                           <p className="text-xs text-muted-foreground font-sans">
-                            Model confidence for this classification
+                            {isInconclusive
+                              ? "Model confidence is below the safety threshold — clinical review required"
+                              : "Model confidence for this classification"
+                            }
                           </p>
                         )}
                       </div>
@@ -377,18 +390,33 @@ const ImageUploader = () => {
                     </div>
                   </div>
 
+                  {result.inconclusive && (
+                    <div className="flex items-start gap-3 p-4 rounded-2xl bg-amber-50 border border-amber-200">
+                      <AlertTriangle className="h-5 w-5 text-amber-600 shrink-0 mt-0.5" />
+                      <div className="space-y-1">
+                        <p className="text-sm font-bold text-amber-800 font-sans">Confidence below safety threshold</p>
+                        <p className="text-sm text-amber-700 font-sans leading-relaxed">
+                          The model's confidence ({result.confidence}%) is below the 60% threshold for definitive classification.
+                          This result should be treated as inconclusive. Please consult a radiologist for clinical review.
+                        </p>
+                      </div>
+                    </div>
+                  )}
+
                   {result.triage && (() => {
                     const isNormal = result.prediction.toLowerCase().includes("normal");
                     const isBenign = result.prediction.toLowerCase().includes("benign");
-                    const triageBorder = isNormal ? "border-l-emerald-500" : isBenign ? "border-l-blue-500" : "border-l-red-500";
+                    const isInconclusiveTriage = result.triage.tier === "Further Evaluation Required";
+                    const triageBorder = isInconclusiveTriage ? "border-l-amber-500" : isNormal ? "border-l-emerald-500" : isBenign ? "border-l-blue-500" : "border-l-red-500";
                     return (
                       <div className={cn("report-triage rounded-2xl p-5 border-l-4 bg-primary/5 space-y-3", triageBorder)}>
                         <div className="flex items-center justify-between">
                           <span className="text-xs font-semibold text-foreground uppercase tracking-wide font-sans">Risk assessment</span>
                           <span className={cn(
                             "px-3 py-1 rounded-full text-xs font-bold",
-                            result.triage.tier === "high concern" ? "bg-red-50 text-red-700 border border-red-200" :
-                            result.triage.tier === "moderate confidence" ? "bg-amber-50 text-amber-700 border border-amber-200" :
+                            result.triage.tier === "High Concern" || result.triage.tier === "high concern" ? "bg-red-50 text-red-700 border border-red-200" :
+                            result.triage.tier === "Moderate Concern" || result.triage.tier === "moderate confidence" ? "bg-amber-50 text-amber-700 border border-amber-200" :
+                            result.triage.tier === "Further Evaluation Required" ? "bg-amber-50 text-amber-700 border border-amber-200" :
                             "bg-primary/10 text-primary border border-primary/20"
                           )}>
                             {result.triage.tier}
@@ -400,6 +428,14 @@ const ImageUploader = () => {
                     );
                   })()}
                 </>
+              )}
+
+              {reportStep === "hidden" && (
+                <FacilityRecommendation
+                  prediction={result.prediction}
+                  confidence={result.confidence / 100}
+                  inconclusive={result.inconclusive}
+                />
               )}
 
               {reportStep === "hidden" && (

@@ -42,6 +42,7 @@ import requests
 BASE_DIR = os.path.dirname(__file__)
 MODEL_DIR = os.path.join(BASE_DIR, "classification_model")
 IMG_SIZE = (224, 224)
+CONFIDENCE_THRESHOLD = 0.60
 
 MODEL_CANDIDATES = [
     "model_v3.keras",
@@ -93,7 +94,13 @@ def predict_with_model(model, x) -> dict:
     preds = model.predict(x)
     probs = preds[0].tolist()
     pred_idx = int(np.argmax(probs))
-    return {"pred_idx": pred_idx, "probs": probs}
+    confidence = float(probs[pred_idx])
+    return {
+        "pred_idx": pred_idx,
+        "probs": probs,
+        "confidence": confidence,
+        "is_conclusive": confidence >= CONFIDENCE_THRESHOLD,
+    }
 
 
 def proxy_predict(file_bytes: bytes, filename: str, content_type: str, proxy_url: str) -> dict:
