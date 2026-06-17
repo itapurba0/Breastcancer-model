@@ -292,11 +292,13 @@ const ImageUploader = () => {
                   const isNormal = result.prediction.toLowerCase().includes("normal");
                   const isBenign = result.prediction.toLowerCase().includes("benign");
 
-                  const gaugeColor = isNormal || isBenign
-                    ? "var(--color-primary)"
-                    : isFailed
-                      ? "var(--color-muted-foreground)"
-                      : "var(--color-secondary)";
+                  const colorMap = {
+                    normal:  { gauge: "#22c55e", bg: "bg-emerald-50", text: "text-emerald-700", border: "border-emerald-200", triage: "border-l-emerald-500" },
+                    benign:  { gauge: "#3b82f6", bg: "bg-blue-50", text: "text-blue-700", border: "border-blue-200", triage: "border-l-blue-500" },
+                    malignant: { gauge: "#ef4444", bg: "bg-red-50", text: "text-red-700", border: "border-red-200", triage: "border-l-red-500" },
+                    failed:  { gauge: "#9ca3af", bg: "bg-muted", text: "text-muted-foreground", border: "border-muted-foreground/20", triage: "border-l-muted-foreground" },
+                  };
+                  const colors = isFailed ? colorMap.failed : isNormal ? colorMap.normal : isBenign ? colorMap.benign : colorMap.malignant;
                   const circumference = 2 * Math.PI * 36;
                   const dashOffset = circumference - (result.confidence / 100) * circumference;
 
@@ -309,7 +311,7 @@ const ImageUploader = () => {
                             <circle cx="44" cy="44" r="36" fill="none" stroke="currentColor" strokeWidth="6"
                               className="text-muted/60" />
                             <motion.circle
-                              cx="44" cy="44" r="36" fill="none" stroke={gaugeColor} strokeWidth="6"
+                              cx="44" cy="44" r="36" fill="none" stroke={colors.gauge} strokeWidth="6"
                               strokeLinecap="round"
                               strokeDasharray={circumference}
                               initial={{ strokeDashoffset: circumference }}
@@ -330,11 +332,8 @@ const ImageUploader = () => {
                           <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide font-sans">Diagnostic result</p>
                           <div className="flex items-center gap-3 mt-1.5">
                             <span className={cn(
-                              "text-base font-heading font-bold tracking-tight px-3 py-1 rounded-lg",
-                              isFailed ? "text-muted-foreground bg-muted" :
-                              isNormal ? "text-primary bg-primary/10" :
-                              isBenign ? "text-primary bg-primary/8" :
-                              "text-secondary-foreground bg-secondary/90"
+                              "text-base font-heading font-bold tracking-tight px-3 py-1 rounded-lg border",
+                              colors.bg, colors.text, colors.border
                             )}>
                               {result.prediction}
                             </span>
@@ -378,23 +377,28 @@ const ImageUploader = () => {
                     </div>
                   </div>
 
-                  {result.triage && (
-                    <div className="report-triage rounded-2xl p-5 border-l-4 border-l-primary bg-primary/5 space-y-3">
-                      <div className="flex items-center justify-between">
-                        <span className="text-xs font-semibold text-foreground uppercase tracking-wide font-sans">Risk assessment</span>
-                        <span className={cn(
-                          "px-3 py-1 rounded-full text-xs font-bold",
-                          result.triage.tier === "high concern" ? "bg-red-50 text-red-700 border border-red-200" :
-                          result.triage.tier === "moderate confidence" ? "bg-amber-50 text-amber-700 border border-amber-200" :
-                          "bg-primary/10 text-primary border border-primary/20"
-                        )}>
-                          {result.triage.tier}
-                        </span>
+                  {result.triage && (() => {
+                    const isNormal = result.prediction.toLowerCase().includes("normal");
+                    const isBenign = result.prediction.toLowerCase().includes("benign");
+                    const triageBorder = isNormal ? "border-l-emerald-500" : isBenign ? "border-l-blue-500" : "border-l-red-500";
+                    return (
+                      <div className={cn("report-triage rounded-2xl p-5 border-l-4 bg-primary/5 space-y-3", triageBorder)}>
+                        <div className="flex items-center justify-between">
+                          <span className="text-xs font-semibold text-foreground uppercase tracking-wide font-sans">Risk assessment</span>
+                          <span className={cn(
+                            "px-3 py-1 rounded-full text-xs font-bold",
+                            result.triage.tier === "high concern" ? "bg-red-50 text-red-700 border border-red-200" :
+                            result.triage.tier === "moderate confidence" ? "bg-amber-50 text-amber-700 border border-amber-200" :
+                            "bg-primary/10 text-primary border border-primary/20"
+                          )}>
+                            {result.triage.tier}
+                          </span>
+                        </div>
+                        <p className="text-sm font-semibold text-foreground leading-snug">{result.triage.recommendation}</p>
+                        <p className="text-sm text-muted-foreground font-sans leading-relaxed">{result.triage.rationale}</p>
                       </div>
-                      <p className="text-sm font-semibold text-foreground leading-snug">{result.triage.recommendation}</p>
-                      <p className="text-sm text-muted-foreground font-sans leading-relaxed">{result.triage.rationale}</p>
-                    </div>
-                  )}
+                    );
+                  })()}
                 </>
               )}
 
