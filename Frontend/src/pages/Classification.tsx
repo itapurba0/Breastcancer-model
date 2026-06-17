@@ -26,7 +26,7 @@ const Classification = () => {
         <Header />
       </div>
 
-      <main className="container mx-auto px-4 sm:px-6 py-12 md:py-16 max-w-4xl relative z-10">
+      <main className="container mx-auto px-4 sm:px-6 py-12 md:py-16 max-w-3xl relative z-10">
         <motion.div
           initial="hidden"
           animate="visible"
