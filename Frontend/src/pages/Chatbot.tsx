@@ -1,20 +1,6 @@
-import { motion } from "framer-motion";
 import Header from "@/components/layout/Header";
 import ChatInterface from "@/components/chatbot/ChatInterface";
 import HeroCanvas from "@/components/layout/HeroCanvas";
-
-const pageVariants = {
-  hidden: { opacity: 0, filter: "blur(10px)" },
-  visible: {
-    opacity: 1,
-    filter: "blur(0px)",
-    transition: {
-      type: "tween",
-      ease: "easeOut",
-      duration: 0.55,
-    },
-  },
-};
 
 const Chatbot = () => {
   return (
@@ -22,25 +8,18 @@ const Chatbot = () => {
       <HeroCanvas />
       <Header />
       
-      <main className="container mx-auto px-4 sm:px-6 py-12 md:py-16 max-w-4xl relative z-10">
-        <motion.div
-          initial="hidden"
-          animate="visible"
-          variants={pageVariants}
-          className="space-y-10"
-        >
-          <div className="text-center space-y-4">
-            <h1 className="text-3xl md:text-5xl font-extrabold text-foreground tracking-[-0.03em] font-heading">
-              Neural Assistant Terminal
+      <main id="main-content" className="relative z-10 min-h-screen px-4 py-12 md:py-16">
+        <div className="max-w-4xl mx-auto space-y-8">
+          <div className="text-center space-y-2">
+            <h1 className="text-2xl md:text-3xl font-heading font-bold text-foreground tracking-tight">
+              Medical Chat
             </h1>
-            <p className="text-sm md:text-base text-muted-foreground max-w-xl mx-auto leading-relaxed font-sans">
+            <p className="text-sm text-muted-foreground font-sans max-w-md mx-auto">
               Ask me about breast cancer diagnosis, treatment options, or screening guidelines.
             </p>
           </div>
-
-          {/* Frosted Chat Interface Console */}
           <ChatInterface />
-        </motion.div>
+        </div>
       </main>
     </div>
   );
