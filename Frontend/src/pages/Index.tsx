@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { ArrowRight, Microscope, MessageCircle, ShieldAlert, Cpu, Heart, CheckCircle2 } from "lucide-react";
+import { ArrowRight, Microscope, MessageCircle, ShieldCheck, CheckCircle2 } from "lucide-react";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import Header from "@/components/layout/Header";
@@ -30,30 +30,28 @@ const itemVariants = {
   },
 };
 
-const Index = () => {
-  const nodes = [
-    {
-      icon: Microscope,
-      title: "MAMMOGRAPHY_INF_SCAN",
-      description: "Deep learning tensor classification models providing prompt visual tissue activation reports.",
-    },
-    {
-      icon: MessageCircle,
-      title: "NEURAL_MED_CHAT",
-      description: "Clinical support LLM chatbot offering instant assistance and general medical screening advice.",
-    },
-    {
-      icon: Cpu,
-      title: "EXPLAINABLE_GRAD_CAM",
-      description: "Tensors are mapped back into standard visual spaces, overlaying tissue weights and gradients.",
-    },
-    {
-      icon: ShieldAlert,
-      title: "HIPAA_DATA_SECURE",
-      description: "All uploaded dicoms, ultrasonography, and medical metadata are fully encrypted in-flight.",
-    },
-  ];
+const features = [
+  {
+    icon: Microscope,
+    title: "Image Analysis",
+    description:
+      "Upload mammography or ultrasound images for instant AI-powered screening with explainable Grad-CAM visualizations.",
+  },
+  {
+    icon: MessageCircle,
+    title: "Medical Chat",
+    description:
+      "Ask questions about breast health, screening guidelines, and risk factors through our retrieval-augmented clinical assistant.",
+  },
+  {
+    icon: ShieldCheck,
+    title: "Privacy & Security",
+    description:
+      "All uploads are processed in-memory and never stored. Your medical data remains fully under your control.",
+  },
+];
 
+const Index = () => {
   return (
     <div className="min-h-screen bg-transparent text-foreground relative selection:bg-secondary/40 selection:text-foreground">
       <HeroCanvas />
@@ -66,75 +64,60 @@ const Index = () => {
           animate="visible"
           className="space-y-12"
         >
-          <motion.div
-            variants={itemVariants}
-            className="glass-panel rounded-[2.5rem] p-6 sm:p-8 md:p-14 relative overflow-hidden shadow-lg border border-brand/15"
-          >
-            <div className="absolute -top-40 -right-40 w-96 h-96 bg-secondary/10 rounded-full blur-3xl pointer-events-none" />
-            <div className="absolute -bottom-40 -left-40 w-96 h-96 bg-sage/30 rounded-full blur-3xl pointer-events-none" />
-
-            <div className="max-w-3xl mx-auto text-center space-y-8">
-              <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-muted/80 border border-brand/25 text-xs sm:text-sm font-mono text-foreground tracking-wide font-bold">
-                <Heart className="h-3.5 w-3.5 animate-pulse text-brand" />
-                <span>[ AI_TRIAGE_CORE_v2.1 ]</span>
-              </div>
-
-              <h1 className="text-3xl sm:text-4xl md:text-7xl font-extrabold text-foreground leading-tight font-heading tracking-[-0.04em]">
-                Deep Learning Triage for
-                <span className="block mt-2 bg-gradient-to-r from-foreground via-brand to-brand/70 bg-clip-text text-transparent">
-                  Breast Cancer Screening
-                </span>
-              </h1>
-
-              <p className="text-sm md:text-base text-muted-foreground font-sans max-w-2xl mx-auto leading-relaxed font-semibold">
-                ClassifierAI harnesses medical deep convolutional architectures to map visual tissues.
-                Upload mammography images for visual gradient explanations and chat with our support model.
-              </p>
-
-              <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-4">
-                <Link to="/classification">
-                  <Button variant="default" className="h-12 px-6 hover:scale-105 transition-all duration-300 font-sans font-bold tracking-wide rounded-full flex items-center gap-2 shadow-sm">
-                    <Microscope className="h-4 w-4" />
-                    Initialize Scan Routine
-                    <ArrowRight className="h-3.5 w-3.5 ml-0.5" />
-                  </Button>
-                </Link>
-                <Link to="/chatbot">
-                  <Button variant="outline" className="h-12 px-6 bg-white/80 hover:scale-105 transition-all duration-300 font-sans font-bold tracking-wide rounded-full flex items-center gap-2 shadow-sm">
-                    <MessageCircle className="h-4 w-4" />
-                    Query Clinical LLM
-                  </Button>
-                </Link>
-              </div>
+          {/* Hero */}
+          <motion.div variants={itemVariants} className="max-w-3xl space-y-6">
+            <p className="text-sm font-semibold tracking-wide text-primary/80 font-sans uppercase">
+              AI-powered breast cancer screening
+            </p>
+            <h1 className="text-3xl sm:text-4xl md:text-7xl font-heading font-bold tracking-tight text-foreground leading-tight">
+              Early detection saves lives
+            </h1>
+            <p className="text-base md:text-lg text-muted-foreground font-sans max-w-xl leading-relaxed">
+              Classify breast tissue images in seconds with our deep learning model and get
+              clear, explained results — designed to support, not replace, clinical judgment.
+            </p>
+            <div className="flex flex-col sm:flex-row items-start gap-4 pt-2">
+              <Link to="/classification">
+                <Button className="bg-primary text-primary-foreground h-12 px-6 font-sans font-bold tracking-wide rounded-full flex items-center gap-2 hover:scale-105 transition-all duration-300 shadow-sm">
+                  <Microscope className="h-4 w-4" />
+                  Start scan
+                  <ArrowRight className="h-3.5 w-3.5 ml-0.5" />
+                </Button>
+              </Link>
+              <Link to="/chatbot">
+                <Button
+                  variant="outline"
+                  className="border border-primary/20 text-primary h-12 px-6 font-sans font-bold tracking-wide rounded-full flex items-center gap-2 hover:scale-105 transition-all duration-300"
+                >
+                  <MessageCircle className="h-4 w-4" />
+                  Chat with assistant
+                </Button>
+              </Link>
             </div>
           </motion.div>
 
-          <motion.div
-            variants={itemVariants}
-            className="grid md:grid-cols-2 gap-4 sm:gap-6"
-          >
-            {nodes.map((node, index) => {
-              const Icon = node.icon;
+          {/* Feature cards */}
+          <motion.div variants={itemVariants} className="space-y-4">
+            {features.map((feature, index) => {
+              const Icon = feature.icon;
               return (
                 <motion.div
                   key={index}
                   whileHover={{
-                    y: -4,
-                    scale: 1.01,
-                    boxShadow: "0 30px 60px hsl(var(--brand) / 0.12)"
+                    y: -2,
+                    transition: { type: "tween", ease: "easeOut", duration: 0.3 },
                   }}
-                  transition={{ type: "tween", ease: "easeOut", duration: 0.35 }}
-                  className="glass-panel rounded-[2rem] p-5 sm:p-7 flex gap-5 shadow-sm border border-brand/15 transition-all duration-300 bg-white"
+                  className="glass-panel rounded-2xl p-5 sm:p-6 flex items-start gap-5 shadow-sm border border-primary/10"
                 >
-                  <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-muted border border-brand/20">
-                    <Icon className="h-5 w-5 text-brand" />
+                  <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-sage/60 border border-primary/10">
+                    <Icon className="h-5 w-5 text-primary" />
                   </div>
-                  <div className="space-y-2">
-                    <h3 className="text-xs font-bold tracking-wider font-mono text-foreground">
-                      {node.title}
+                  <div className="space-y-1.5">
+                    <h3 className="font-heading font-bold tracking-tight text-foreground text-sm sm:text-base">
+                      {feature.title}
                     </h3>
-                    <p className="text-xs sm:text-sm text-muted-foreground font-sans leading-relaxed font-semibold">
-                      {node.description}
+                    <p className="text-xs sm:text-sm text-muted-foreground font-sans leading-relaxed">
+                      {feature.description}
                     </p>
                   </div>
                 </motion.div>
@@ -142,26 +125,29 @@ const Index = () => {
             })}
           </motion.div>
 
+          {/* Disclaimer */}
           <motion.div
             variants={itemVariants}
-            className="glass-panel rounded-2xl p-5 flex items-center justify-center gap-3 text-center border border-brand/15 bg-white/70 shadow-sm"
+            className="flex items-center justify-center gap-3 py-4"
           >
-            <CheckCircle2 className="h-4 w-4 text-brand" />
-            <p className="text-xs sm:text-sm text-muted-foreground font-sans font-semibold">
-              Developed as clinical support assistance. All screening reports must be confirmed by qualified medical oncology staff.
+            <CheckCircle2 className="h-4 w-4 text-primary/50 shrink-0" />
+            <p className="text-xs text-muted-foreground/70 font-sans text-center max-w-lg leading-relaxed">
+              For educational and research purposes only. Always consult a qualified healthcare
+              provider for diagnosis and treatment decisions.
             </p>
           </motion.div>
         </motion.div>
       </main>
 
-      <footer className="py-10 border-t border-brand/10 relative z-10 bg-muted/30">
+      {/* Footer */}
+      <footer className="py-10 border-t border-primary/10 relative z-10 bg-muted/30">
         <div className="container mx-auto px-4 sm:px-6 max-w-5xl flex flex-col md:flex-row items-center justify-between gap-4">
-          <span className="footer-small font-mono text-muted-foreground font-bold">
-            &copy; 2026 CLASSIFIER_AI_LABS. All rights reserved.
+          <span className="footer-small font-mono text-muted-foreground">
+            &copy; 2026 Breast Cancer Companion. All rights reserved.
           </span>
-          <span className="footer-small font-mono text-muted-foreground flex items-center gap-2 font-bold">
-            <span className="w-2.5 h-2.5 rounded-full bg-teal-500 animate-ping" />
-            VIRTUAL_SCAN_NODE_ONLINE
+          <span className="footer-small font-mono text-muted-foreground flex items-center gap-2">
+            <span className="w-2.5 h-2.5 rounded-full bg-primary animate-pulse" />
+            System online
           </span>
         </div>
       </footer>
