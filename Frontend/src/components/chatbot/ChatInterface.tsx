@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from "react";
-import { Send, Bot, User, Loader2, Sparkles, ChevronDown, LogOut } from "lucide-react";
+import { Send, Bot, User, Loader2, ChevronDown, LogOut, BookOpen } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { motion } from "framer-motion";
@@ -25,10 +25,10 @@ interface Message {
 }
 
 const suggestedQuestions = [
-  "Early warning indicators of tissue changes?",
-  "Standard frequency recommendations for scanning?",
-  "What is the mathematical definition of benign triage?",
-  "Known genetic risk markers for breast cancer?",
+  "What are the early signs of breast cancer?",
+  "How should I prepare for a mammogram?",
+  "What do benign results mean?",
+  "What are the recommended screening frequencies?",
 ];
 
 const SourcesPanel = ({ sources }: { sources: Source[] }) => {
@@ -42,8 +42,8 @@ const SourcesPanel = ({ sources }: { sources: Source[] }) => {
     <div className="mt-3 text-xs">
       <button
         onClick={() => setIsExpanded(!isExpanded)}
-        className="flex items-center gap-1.5 text-brand font-mono tracking-wide hover:opacity-80 transition-opacity"
-        aria-label={isExpanded ? "Close sources" : "Show sources"}
+        className="flex items-center gap-1.5 text-primary font-sans font-medium hover:opacity-80 transition-opacity"
+        aria-label={isExpanded ? "Close sources" : "View sources"}
       >
         <ChevronDown
           className={cn(
@@ -51,28 +51,29 @@ const SourcesPanel = ({ sources }: { sources: Source[] }) => {
             isExpanded ? "rotate-0" : "-rotate-90"
           )}
         />
-        <span>[{sources.length}_SOURCE_CITATIONS_VERIFIED]</span>
+        <BookOpen className="h-3.5 w-3.5" />
+        <span>View sources</span>
       </button>
 
       {isExpanded && (
-        <div className="mt-3 space-y-2 border-t border-brand/10 pt-3">
+        <div className="mt-3 space-y-2 border-t border-primary/10 pt-3">
           {sources.map((source) => (
             <div
               key={source.id}
-              className="bg-muted rounded-xl p-3 border border-brand/10 space-y-1.5"
+              className="bg-white rounded-xl p-3 border border-primary/10 space-y-1.5"
             >
               <div className="flex items-start justify-between">
-                <div className="font-bold text-foreground font-mono uppercase tracking-wide text-xs">
-                  [{source.id}] {source.title}
+                <div className="font-semibold text-foreground text-sm">
+                  {source.title}
                 </div>
-                <span className="inline-block px-2 py-0.5 rounded bg-brand/10 border border-brand/20 text-brand text-[10px] font-mono">
-                  {(source.score * 100).toFixed(0)}% MATCH
+                <span className="inline-block bg-primary/10 text-primary text-xs px-2 py-0.5 rounded-full">
+                  {(source.score * 100).toFixed(0)}% relevant
                 </span>
               </div>
               <p className="text-muted-foreground font-sans text-xs">
-                {source.source} • chunk #{source.chunk_index}
+                {source.source} &middot; chunk #{source.chunk_index}
               </p>
-              <p className="text-muted-foreground font-sans leading-relaxed text-xs bg-white/50 p-2 rounded-lg border border-brand/5">
+              <p className="text-muted-foreground font-sans leading-relaxed text-xs bg-white/50 p-2 rounded-lg border border-primary/5">
                 &ldquo;{source.text_preview}&rdquo;
               </p>
             </div>
@@ -85,7 +86,7 @@ const SourcesPanel = ({ sources }: { sources: Source[] }) => {
 
 const WELCOME_MESSAGE: Message = {
   id: "1",
-  content: "Welcome to the ClassifierAI neural assistant hub. I am integrated with our RAG scientific indexes. I can help resolve clinical queries regarding breast cancer, diagnostic scans, and model explanations. How can I assist you today?",
+  content: "Hello! I'm your medical assistant. I can help you understand breast cancer diagnosis, treatment options, and screening guidelines. What would you like to know?",
   role: "assistant",
   timestamp: new Date(),
 };
@@ -254,27 +255,27 @@ const ChatInterface = () => {
   };
 
   return (
-    <div className="flex flex-col h-[60vh] min-h-[400px] max-h-[80vh] lg:max-h-[700px] glass-panel rounded-3xl border border-brand/10 soft-shadow-lg overflow-hidden bg-white">
-      <div className="px-4 sm:px-6 py-4 border-b border-brand/10 bg-white flex items-center justify-between">
+    <div className="flex flex-col h-[60vh] min-h-[400px] max-h-[80vh] lg:max-h-[700px] glass-panel rounded-3xl border border-primary/10 soft-shadow-lg overflow-hidden bg-white">
+      <div className="px-4 sm:px-6 py-4 border-b border-primary/10 bg-white flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-white border border-brand/10 soft-shadow-sm">
-            <Bot className="h-5 w-5 text-brand" />
+          <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-primary/10 border border-primary/20 soft-shadow-sm">
+            <Bot className="h-5 w-5 text-primary" />
           </div>
           <div>
-            <h3 className="font-bold text-foreground font-heading text-sm">Medical Assistant</h3>
+            <h3 className="font-heading font-semibold text-foreground text-sm">Medical Assistant</h3>
             <p className="text-xs text-muted-foreground flex items-center gap-1.5 font-sans">
-              <span className="w-1.5 h-1.5 rounded-full bg-sage animate-pulse" />
-              Data encrypted end-to-end
+              <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
+              Connected
             </p>
           </div>
         </div>
         <div className="flex items-center gap-2">
-          <div className="hidden sm:flex items-center gap-2 px-3 py-1 rounded-full bg-muted/60 border border-brand/10 text-[10px] font-mono text-muted-foreground">
-            <span>QUERY_COUNT: {messages.filter(m => m.role === 'user').length}</span>
+          <div className="hidden sm:flex items-center gap-2 px-3 py-1 rounded-full bg-primary/5 border border-primary/10 text-[10px] font-sans text-muted-foreground">
+            <span>{messages.filter(m => m.role === 'user').length} messages</span>
           </div>
           <button
             onClick={logout}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[10px] font-mono text-muted-foreground hover:text-foreground border border-transparent hover:border-brand/10 hover:bg-muted/60 transition-all duration-300"
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[10px] font-sans text-muted-foreground hover:text-foreground border border-transparent hover:border-primary/10 hover:bg-primary/5 transition-all duration-300"
             title="Sign out"
             aria-label="Logout"
           >
@@ -284,11 +285,11 @@ const ChatInterface = () => {
         </div>
       </div>
 
-      <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-6 bg-white" role="log" aria-live="polite">
+      <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-6 bg-gradient-to-b from-[#FEFDFB] to-[#F7F6F3]" role="log" aria-live="polite">
         {chatLoading ? (
           <div className="flex items-center justify-center h-full">
             <div className="flex items-center gap-2 text-muted-foreground">
-              <Loader2 className="h-5 w-5 animate-spin text-brand" />
+              <Loader2 className="h-5 w-5 animate-spin text-primary" />
               <span className="text-xs font-sans font-bold">Loading history...</span>
             </div>
           </div>
@@ -307,14 +308,14 @@ const ChatInterface = () => {
               className={cn(
                 "flex h-8 w-8 shrink-0 items-center justify-center rounded-2xl border",
                 message.role === "user"
-                  ? "bg-secondary/20 border-secondary/30 text-foreground"
-                  : "bg-white border-brand/10 text-foreground"
+                  ? "bg-primary/10 border-primary/20 text-primary"
+                  : "bg-primary/10 border-primary/20 text-primary"
               )}
             >
               {message.role === "user" ? (
                 <User className="h-4 w-4" />
               ) : (
-                <Bot className="h-4 w-4 text-brand" />
+                <Bot className="h-4 w-4" />
               )}
             </div>
 
@@ -322,12 +323,12 @@ const ChatInterface = () => {
               className={cn(
                 "max-w-[90%] sm:max-w-[82%] md:max-w-[78%] rounded-3xl px-4 sm:px-5 py-3.5 border relative bg-white",
                 message.role === "user"
-                  ? "bg-primary/10 text-foreground border-secondary/20 rounded-tr-sm"
-                  : "bg-muted text-foreground border-brand/10 rounded-tl-sm soft-shadow-sm"
+                  ? "bg-primary/8 text-foreground border-primary/10 rounded-br-lg"
+                  : "bg-white text-foreground border-primary/10 rounded-bl-lg soft-shadow-sm"
               )}
             >
               {message.role === "assistant" && (
-                <div className="absolute -left-[1px] top-0 bottom-0 w-[2px] bg-gradient-to-b from-brand to-transparent rounded-l" />
+                <div className="absolute -left-[1px] top-0 bottom-0 w-[2px] bg-gradient-to-b from-primary to-transparent rounded-l" />
               )}
 
               {message.role === "user" ? (
@@ -336,9 +337,9 @@ const ChatInterface = () => {
                 </p>
               ) : message.content === "" ? (
                 <div className="flex items-center gap-1.5 py-2 px-1">
-                  <div className="w-1.5 h-1.5 rounded-full bg-brand/60 animate-pulse" style={{ animationDelay: "0ms" }} />
-                  <div className="w-1.5 h-1.5 rounded-full bg-brand/60 animate-pulse" style={{ animationDelay: "150ms" }} />
-                  <div className="w-1.5 h-1.5 rounded-full bg-brand/60 animate-pulse" style={{ animationDelay: "300ms" }} />
+                  <div className="w-1.5 h-1.5 rounded-full bg-primary/60 animate-pulse" style={{ animationDelay: "0ms" }} />
+                  <div className="w-1.5 h-1.5 rounded-full bg-primary/60 animate-pulse" style={{ animationDelay: "150ms" }} />
+                  <div className="w-1.5 h-1.5 rounded-full bg-primary/60 animate-pulse" style={{ animationDelay: "300ms" }} />
                 </div>
               ) : (
                   <div className="text-sm sm:text-base leading-relaxed font-sans space-y-3">
@@ -347,7 +348,7 @@ const ChatInterface = () => {
                         p: ({ node, ...props }) => <p className="whitespace-pre-wrap" {...props} />,
                         ul: ({ node, ...props }) => <ul className="list-disc pl-5 space-y-1" {...props} />,
                         ol: ({ node, ...props }) => <ol className="list-decimal pl-5 space-y-1" {...props} />,
-                        li: ({ node, ...props }) => <li className="pl-1 marker:text-brand/70" {...props} />,
+                        li: ({ node, ...props }) => <li className="pl-1 marker:text-primary/70" {...props} />,
                         strong: ({ node, ...props }) => <strong className="font-semibold text-foreground" {...props} />,
                         h1: ({ node, ...props }) => <h1 className="text-lg font-bold mb-2 mt-4" {...props} />,
                         h2: ({ node, ...props }) => <h2 className="text-base font-bold mb-2 mt-4" {...props} />,
@@ -380,14 +381,14 @@ const ChatInterface = () => {
 
         {isTyping && (
           <div className="flex gap-3 sm:gap-4">
-            <div className="flex h-8 w-8 items-center justify-center rounded-2xl bg-white border border-brand/10 soft-shadow-sm">
-              <Bot className="h-4 w-4 text-brand" />
+            <div className="flex h-8 w-8 items-center justify-center rounded-2xl bg-primary/10 border border-primary/20 soft-shadow-sm">
+              <Bot className="h-4 w-4 text-primary" />
             </div>
-            <div className="bg-white rounded-3xl rounded-tl-sm px-5 py-3 border border-brand/10 soft-shadow-sm">
+            <div className="bg-white rounded-3xl rounded-bl-lg px-5 py-3 border border-primary/10 soft-shadow-sm">
               <div className="flex items-center gap-1.5 py-1">
-                <div className="w-1.5 h-1.5 rounded-full bg-brand animate-pulse" style={{ animationDelay: "0ms" }} />
-                <div className="w-1.5 h-1.5 rounded-full bg-brand animate-pulse" style={{ animationDelay: "150ms" }} />
-                <div className="w-1.5 h-1.5 rounded-full bg-brand animate-pulse" style={{ animationDelay: "300ms" }} />
+                <div className="w-1.5 h-1.5 rounded-full bg-primary/60 animate-pulse" style={{ animationDelay: "0ms" }} />
+                <div className="w-1.5 h-1.5 rounded-full bg-primary/60 animate-pulse" style={{ animationDelay: "150ms" }} />
+                <div className="w-1.5 h-1.5 rounded-full bg-primary/60 animate-pulse" style={{ animationDelay: "300ms" }} />
               </div>
             </div>
           </div>
@@ -398,16 +399,15 @@ const ChatInterface = () => {
 
       {messages.length === 1 && (
         <div className="px-4 sm:px-6 pb-4 pt-2">
-          <p className="text-xs text-muted-foreground mb-3 flex items-center gap-1.5 font-sans">
-            <Sparkles className="h-3.5 w-3.5 text-brand" />
-            Suggested questions
+          <p className="text-xs text-muted-foreground mb-3 font-sans font-medium">
+            How can I help you today?
           </p>
-          <div className="flex flex-wrap gap-2">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
             {suggestedQuestions.map((question, index) => (
               <button
                 key={index}
                 onClick={() => handleSendMessage(question)}
-                className="text-xs px-3 py-2.5 rounded-2xl bg-muted/60 border border-brand/10 text-foreground hover:soft-shadow-sm hover:bg-muted/70 transition-all duration-300 font-sans text-left min-h-[44px]"
+                className="text-left text-xs sm:text-sm px-4 py-3 rounded-2xl bg-white border border-primary/10 text-foreground hover:bg-primary/5 hover:border-primary/20 transition-all duration-200 font-sans min-h-[44px] flex items-center"
               >
                 {question}
               </button>
@@ -416,7 +416,7 @@ const ChatInterface = () => {
         </div>
       )}
 
-      <div className="p-4 sm:p-6 border-t border-brand/10 bg-white">
+      <div className="p-4 sm:p-6 border-t border-primary/10 bg-white">
         <div className="flex items-end gap-3 sm:gap-4">
           <div className="flex-1 relative">
             <textarea
@@ -424,18 +424,16 @@ const ChatInterface = () => {
               value={inputValue}
               onChange={(e) => setInputValue(e.target.value)}
               onKeyDown={handleKeyDown}
-              placeholder="Query deep diagnostic patterns..."
+              placeholder="Ask about breast cancer diagnosis, treatment, or screening..."
               rows={1}
-              className="w-full resize-none rounded-3xl border border-brand/10 bg-white px-4 py-3.5 text-sm sm:text-base text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-brand focus:border-brand transition-all duration-300"
+              className="w-full resize-none rounded-3xl border border-primary/15 bg-white px-4 py-3.5 text-sm sm:text-base text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/30 transition-all duration-200"
               style={{ minHeight: "48px", maxHeight: "120px" }}
             />
           </div>
           <Button
             onClick={() => handleSendMessage()}
             disabled={!inputValue.trim() || isTyping}
-            variant="medical"
-            size="icon"
-            className="h-12 w-12 shrink-0 bg-brand text-white hover:scale-105 transition-transform duration-300 soft-shadow-sm"
+            className="h-12 w-12 shrink-0 bg-primary text-white hover:bg-primary/90 rounded-full transition-colors duration-200 soft-shadow-sm"
             aria-label="Send message"
           >
             {isTyping ? (
@@ -445,8 +443,8 @@ const ChatInterface = () => {
             )}
           </Button>
         </div>
-        <p className="text-[10px] sm:text-xs text-muted-foreground mt-3 text-center font-sans">
-          <strong>[DISCLAIMER]</strong> AI assistant summaries are strictly educational. Direct all clinical triages to specialized oncological staff.
+        <p className="text-[10px] sm:text-xs text-muted-foreground/60 mt-3 text-center font-sans italic">
+          This assistant provides educational information only. Always consult a healthcare professional for medical advice.
         </p>
       </div>
     </div>
