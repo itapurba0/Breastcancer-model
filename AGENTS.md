@@ -24,14 +24,21 @@ backend/                          # FastAPI (Python)
 └── run_predict_concurrent.py     # Load-test /predict endpoint
 Frontend/                         # Vite + React + TS + shadcn/ui
 ├── src/
-│   ├── App.tsx                   # Router: /, /classification, /chatbot
+│   ├── App.tsx                   # Router + AnimatePresence page transitions
 │   ├── pages/
-│   │   ├── Index.tsx
-│   │   ├── Classification.tsx    # ImageUploader → POST /predict
-│   │   └── Chatbot.tsx           # ChatInterface → POST /chat (streaming)
+│   │   ├── Index.tsx             # Landing: hero + 3 feature cards + disclaimer
+│   │   ├── Classification.tsx    # Page header + how-it-works + ImageUploader
+│   │   ├── Chatbot.tsx           # ChatInterface → POST /chat (streaming)
+│   │   ├── Auth.tsx              # Two-column login/register
+│   │   └── NotFound.tsx          # Glass-panel 404
 │   └── components/
-│       ├── classification/ImageUploader.tsx
-│       └── chatbot/ChatInterface.tsx
+│       ├── layout/
+│       │   ├── Header.tsx        # Skip-to-content, aria-labels, sage active state
+│       │   └── HeroCanvas.tsx    # Three.js particle background (sage palette)
+│       ├── classification/
+│       │   └── ImageUploader.tsx # Upload → analyze → color-coded results + report
+│       └── chatbot/
+│           └── ChatInterface.tsx # Premium clinical chat with streaming
 ├── vite.config.ts                # Dev :3000, proxies /chat → :8000, /predict → :8000
 └── components.json               # shadcn/ui config
 ```
@@ -91,6 +98,18 @@ npm run preview    # Vite preview
 - **Class indices**: `{"benign": 0, "malignant": 1, "normal": 2}` (in `class_indices.json`).
 - **Grad-CAM**: Handles both nested (transfer learning) and flat model architectures.
 - **RAG stack**: FastEmbed (`BAAI/bge-small-en-v1.5`) for embeddings, Qdrant for vector store, OpenRouter (`openai/gpt-oss-120b:free`) for LLM. Tokenizer parallelism disabled.
+- **Page transitions**: `App.tsx` uses `AnimatePresence` with `useLocation()` for blur-fade page transitions.
+- **Dark mode locked**: Tailwind `darkMode: false` + CSS `color-scheme: light` — no system dark mode override.
+
+## UI design system
+
+- **Palette**: deep sage `#2D6A4F` primary, warm amber `#E8B86D` secondary, mint wash `#D8F3DC` accent, warm white `#FEFDFB` background
+- **Fonts**: Plus Jakarta Sans (headings), Inter (body), Inconsolata (data values only)
+- **Classification result colors**: green `#22c55e` = normal, blue `#3b82f6` = benign, red `#ef4444` = malignant
+- **Component library**: shadcn/ui (9 components kept: button, toaster, sonner, tooltip, input, label, skeleton, badge, toast)
+- **Print CSS**: clinical report layout at 9pt, sage accents, report-specific utilities (`.report-accent-bar`, `.report-triage`, `.report-signature`, `.report-disclaimer`)
+- **Classification page**: page header + 3-step how-it-works strip + ImageUploader with circular SVG confidence gauge, color-coded triage, Grad-CAM side-by-side
+- **Chatbot page**: gradient background, clean message bubbles, 2x2 suggested questions, sources panel
 
 ## Required setup
 
@@ -110,6 +129,7 @@ npm run preview    # Vite preview
 - `strictNullChecks: false`, `noImplicitAny: false` in `tsconfig.json`
 - `@/*` path alias maps to `./src/*`
 - Backend classify/evaluate scripts suppress pyright with `# pyright: ignore` comments
+- 4 pre-existing lint warnings (react-refresh/only-export-components in shadcn/ui files) — not our issue
 
 ## Testing quirks
 
