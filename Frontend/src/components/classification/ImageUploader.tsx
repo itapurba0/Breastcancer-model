@@ -461,7 +461,7 @@ const ImageUploader = () => {
                     </div>
                   </div>
 
-                  <div className="report-grid grid grid-cols-1 md:grid-cols-2 gap-6 mb-8 break-inside-avoid report-section">
+                  <div className="report-grid grid grid-cols-1 md:grid-cols-2 print:grid-cols-2 gap-6 mb-8 break-inside-avoid report-section">
                     <div className="space-y-2">
                       <p className="report-label text-xs font-bold text-muted-foreground font-mono border-b border-brand/10 pb-2">ORIGINAL SCAN VECTOR</p>
                       <div className="report-image-wrap bg-black/5 rounded-xl flex items-center justify-center p-2 aspect-square border border-brand/10">
