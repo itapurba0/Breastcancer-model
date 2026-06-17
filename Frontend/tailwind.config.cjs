@@ -1,6 +1,7 @@
 /** @type {import('tailwindcss').Config} */
 module.exports = {
     // Light-theme focused layout only (we're moving to a bespoke light Health-Tech theme)
+    darkMode: false,
     media: false,
     content: [
         "./index.html",
@@ -99,9 +100,9 @@ module.exports = {
             },
             // Replace harsh default shadows with ultra-soft, diffused shadows used consistently
             boxShadow: {
-                "soft": "0 14px 40px rgba(120,144,156,0.06)",
-                "soft-md": "0 20px 60px rgba(120,144,156,0.08)",
-                "soft-lg": "0 30px 80px rgba(120,144,156,0.10)",
+                "soft": "0 14px 40px rgba(45, 106, 79, 0.06)",
+                "soft-md": "0 20px 60px rgba(45, 106, 79, 0.08)",
+                "soft-lg": "0 30px 80px rgba(45, 106, 79, 0.10)",
                 "none": "none",
             },
         },
