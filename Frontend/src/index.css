@@ -156,7 +156,7 @@
   body {
     font-size: 9pt;
     line-height: 1.35;
-    color: #000;
+    color: hsl(var(--foreground));
     background: #fff;
   }
 
@@ -166,7 +166,7 @@
     backdrop-filter: none !important;
     -webkit-backdrop-filter: none !important;
     box-shadow: none !important;
-    border: 1px solid #ccc !important;
+    border: 1px solid hsl(var(--border)) !important;
     border-radius: 0 !important;
   }
 
@@ -176,20 +176,37 @@
     box-shadow: none !important;
   }
 
+  .print\:hidden {
+    display: none !important;
+  }
+
+  /* Report letterhead */
+  .report-accent-bar {
+    height: 4px;
+    background: hsl(var(--primary));
+    margin-bottom: 1rem;
+  }
+
+  /* Report preview container */
   .report-preview {
     padding: 0 !important;
     margin: 0 !important;
     border: none !important;
+    border-radius: 0 !important;
   }
 
+  /* Report sections */
   .report-section {
-    margin-bottom: 0.35cm !important;
+    margin-bottom: 0.5cm !important;
+    break-inside: avoid;
   }
 
+  /* Patient info grid */
   .report-grid {
     gap: 0.3cm !important;
   }
 
+  /* Report images */
   .report-image-wrap {
     aspect-ratio: auto !important;
     height: 3.5cm !important;
@@ -201,6 +218,7 @@
     max-height: 3.1cm !important;
   }
 
+  /* Report typography */
   .report-heading {
     font-size: 14pt !important;
     margin-bottom: 0.2cm !important;
@@ -212,10 +230,12 @@
 
   .report-label {
     font-size: 7pt !important;
+    color: hsl(var(--primary)) !important;
   }
 
   .report-value {
     font-size: 9pt !important;
+    font-weight: 600 !important;
   }
 
   .report-body {
@@ -223,13 +243,54 @@
     line-height: 1.35 !important;
   }
 
+  /* Triage callout */
+  .report-triage {
+    border: 1px solid hsl(var(--primary) / 0.3) !important;
+    background: hsl(var(--primary) / 0.03) !important;
+    padding: 0.3cm !important;
+    break-inside: avoid;
+  }
+
+  /* Disclaimer */
   .report-disclaimer {
     margin-top: 0.35cm !important;
     padding: 0.25cm !important;
-    border-width: 1px !important;
+    border: 1px solid hsl(var(--primary) / 0.3) !important;
+    background: hsl(var(--primary) / 0.03) !important;
+    break-inside: avoid;
   }
 
   .report-disclaimer .report-body {
     font-size: 8pt !important;
   }
+
+  /* Signature footer */
+  .report-signature {
+    margin-top: 1cm !important;
+    padding-top: 0.3cm !important;
+    border-top: 1px solid hsl(var(--border)) !important;
+    break-inside: avoid;
+  }
+}
+
+/* Report accent bar (screen + print) */
+.report-accent-bar {
+  height: 4px;
+  background: linear-gradient(90deg, hsl(var(--primary)), hsl(var(--primary) / 0.4));
+  border-radius: 2px;
+}
+
+/* Triage callout (screen + print) */
+.report-triage {
+  border: 1px solid hsl(var(--primary) / 0.2);
+  background: hsl(var(--primary) / 0.03);
+  border-radius: 0.75rem;
+  padding: 1rem;
+}
+
+/* Signature footer (screen + print) */
+.report-signature {
+  border-top: 1px solid hsl(var(--border));
+  padding-top: 1rem;
+  margin-top: 2rem;
 }
