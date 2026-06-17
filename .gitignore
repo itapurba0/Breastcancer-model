@@ -5,3 +5,4 @@ high_confidence.json
 *.doc
 backend/.env
 backend/chatbot/.env
+.agents
