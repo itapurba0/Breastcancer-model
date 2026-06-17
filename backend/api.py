@@ -1,9 +1,9 @@
 
-from fastapi import FastAPI, File, UploadFile, HTTPException # type: ignore
+from fastapi import FastAPI, File, UploadFile, HTTPException, Depends # type: ignore
 from fastapi.middleware.cors import CORSMiddleware 
 from fastapi.responses import StreamingResponse
 import os
-from typing import Dict,List
+from typing import Dict, List
 
 from pydantic import BaseModel
 import uvicorn
@@ -12,6 +12,9 @@ import model_utils
 from contextlib import asynccontextmanager
 import traceback
 from chatbot.engine import generate_rag_response
+from auth.routes import router as auth_router
+from auth.deps import get_current_user
+from database import sessions_collection
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -26,6 +29,7 @@ async def lifespan(app: FastAPI):
    
 
 app = FastAPI(title="Backend Classifier API", lifespan=lifespan)
+app.include_router(auth_router)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["http://localhost:3000", "http://127.0.0.1:3000", "http://localhost:3001", "http://127.0.0.1:3001"],
@@ -93,14 +97,15 @@ class MessageItem(BaseModel):
     role: str
     content: str
 
-# 2. Tell the API to expect a LIST of those messages
 class ChatRequest(BaseModel):
     messages: List[MessageItem]
+
+class SaveChatRequest(BaseModel):
+    messages: list
 
 @app.post("/chat")
 async def chat_endpoint(request: ChatRequest):
     try:
-        # Pass the question from React to your RAG engine
        return StreamingResponse(
         generate_rag_response(request.messages), 
         media_type="text/plain"
@@ -108,6 +113,24 @@ async def chat_endpoint(request: ChatRequest):
     except Exception as e:
         print(f"API Error: {e}")
         raise HTTPException(status_code=500, detail="Internal Server Error")
+
+
+@app.get("/chat/history")
+def get_chat_history(email: str = Depends(get_current_user)):
+    session = sessions_collection.find_one({"email": email})
+    if not session or not session.get("messages"):
+        return {"messages": []}
+    return {"messages": session["messages"]}
+
+
+@app.post("/chat/save")
+def save_chat_history(body: SaveChatRequest, email: str = Depends(get_current_user)):
+    sessions_collection.update_one(
+        {"email": email},
+        {"$set": {"messages": body.messages, "updated_at": __import__("datetime").datetime.utcnow()}},
+        upsert=True
+    )
+    return {"status": "ok"}
 
 
 if __name__ == "__main__":

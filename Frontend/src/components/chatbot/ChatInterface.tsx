@@ -1,9 +1,10 @@
 import { useState, useRef, useEffect } from "react";
-import { Send, Bot, User, Loader2, Sparkles, ChevronDown } from "lucide-react";
+import { Send, Bot, User, Loader2, Sparkles, ChevronDown, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { motion } from "framer-motion";
-import ReactMarkdown from "react-markdown"; // <--- NEW IMPORT
+import ReactMarkdown from "react-markdown";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface Source {
   id: number;
@@ -81,30 +82,54 @@ const SourcesPanel = ({ sources }: { sources: Source[] }) => {
   );
 };
 
-const ChatInterface = () => {
-  const [messages, setMessages] = useState<Message[]>(() => {
-    const saved = sessionStorage.getItem("classifierAIChat");
-    if (saved) {
-      const parsed = JSON.parse(saved);
-      return parsed.map((m: Omit<Message, "timestamp"> & { timestamp: string }) => ({
-        ...m,
-        timestamp: new Date(m.timestamp)
-      }));
-    }
+const WELCOME_MESSAGE: Message = {
+  id: "1",
+  content: "Welcome to the ClassifierAI neural assistant hub. I am integrated with our RAG scientific indexes. I can help resolve clinical queries regarding breast cancer, diagnostic scans, and model explanations. How can I assist you today?",
+  role: "assistant",
+  timestamp: new Date(),
+};
 
-    return [
-      {
-        id: "1",
-        content: "Welcome to the ClassifierAI neural assistant hub. I am integrated with our RAG scientific indexes. I can help resolve clinical queries regarding breast cancer, diagnostic scans, and model explanations. How can I assist you today?",
-        role: "assistant",
-        timestamp: new Date(),
-      },
-    ];
-  });
+const ChatInterface = () => {
+  const { token, logout } = useAuth();
+
+  const [messages, setMessages] = useState<Message[]>([WELCOME_MESSAGE]);
+  const [chatLoading, setChatLoading] = useState(true);
 
   useEffect(() => {
-    sessionStorage.setItem("classifierAIChat", JSON.stringify(messages));
-  }, [messages]);
+    if (!token) {
+      setChatLoading(false);
+      return;
+    }
+    fetch("/chat/history", {
+      headers: { Authorization: `Bearer ${token}` },
+    })
+      .then((r) => r.json())
+      .then((data) => {
+        if (data.messages && data.messages.length > 0) {
+          setMessages(
+            data.messages.map((m: Record<string, unknown>) => ({
+              ...m,
+              id: m.id || Date.now().toString() + Math.random(),
+              timestamp: new Date(m.timestamp || Date.now()),
+            }))
+          );
+        }
+      })
+      .catch(() => {})
+      .finally(() => setChatLoading(false));
+  }, [token]);
+
+  const saveMessages = (msgs: Message[]) => {
+    if (!token) return;
+    fetch("/chat/save", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({ messages: msgs }),
+    }).catch(() => {});
+  };
 
   const [inputValue, setInputValue] = useState("");
   const [isTyping, setIsTyping] = useState(false);
@@ -129,7 +154,11 @@ const ChatInterface = () => {
       timestamp: new Date(),
     };
 
-    setMessages((prev) => [...prev, userMessage]);
+    setMessages((prev) => {
+      const updated = [...prev, userMessage];
+      saveMessages(updated);
+      return updated;
+    });
     setInputValue("");
     setIsTyping(true);
 
@@ -139,7 +168,7 @@ const ChatInterface = () => {
         content: msg.content,
       }));
 
-      const response = await fetch("http://localhost:8000/chat", {
+      const response = await fetch("/chat", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -154,17 +183,20 @@ const ChatInterface = () => {
       }
 
       const assistantMessageId = (Date.now() + 1).toString();
-      setMessages((prev) => [
-        ...prev,
-        {
-          id: assistantMessageId,
-          content: "",
-          role: "assistant",
-          timestamp: new Date(),
-          sources: [],
-          status: "success",
-        },
-      ]);
+      setMessages((prev) => {
+        const updated = [
+          ...prev,
+          {
+            id: assistantMessageId,
+            content: "",
+            role: "assistant" as const,
+            timestamp: new Date(),
+            sources: [] as Source[],
+            status: "success" as const,
+          },
+        ];
+        return updated;
+      });
 
       setIsTyping(false);
 
@@ -181,15 +213,21 @@ const ChatInterface = () => {
           const chunk = decoder.decode(value, { stream: true });
           streamedText += chunk;
 
-          setMessages((prev) =>
-            prev.map((msg) =>
+          setMessages((prev) => {
+            const updated = prev.map((msg) =>
               msg.id === assistantMessageId
                 ? { ...msg, content: streamedText }
                 : msg
-            )
-          );
+            );
+            return updated;
+          });
         }
       }
+
+      setMessages((prev) => {
+        saveMessages(prev);
+        return prev;
+      });
     } catch (error) {
       console.error("Chat error:", error);
 
@@ -229,13 +267,30 @@ const ChatInterface = () => {
             </p>
           </div>
         </div>
-        <div className="hidden sm:flex items-center gap-2 px-3 py-1 rounded-full bg-muted/60 border border-brand/10 text-[10px] font-mono text-muted-foreground">
-          <span>QUERY_COUNT: {messages.filter(m => m.role === 'user').length}</span>
+        <div className="flex items-center gap-2">
+          <div className="hidden sm:flex items-center gap-2 px-3 py-1 rounded-full bg-muted/60 border border-brand/10 text-[10px] font-mono text-muted-foreground">
+            <span>QUERY_COUNT: {messages.filter(m => m.role === 'user').length}</span>
+          </div>
+          <button
+            onClick={logout}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[10px] font-mono text-muted-foreground hover:text-foreground border border-transparent hover:border-brand/10 hover:bg-muted/60 transition-all duration-300"
+            title="Sign out"
+          >
+            <LogOut className="h-3.5 w-3.5" />
+            <span className="hidden sm:inline">Sign out</span>
+          </button>
         </div>
       </div>
 
       <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-6 bg-white">
-        {messages.map((message) => (
+        {chatLoading ? (
+          <div className="flex items-center justify-center h-full">
+            <div className="flex items-center gap-2 text-muted-foreground">
+              <Loader2 className="h-5 w-5 animate-spin text-brand" />
+              <span className="text-xs font-mono font-bold">LOADING_HISTORY...</span>
+            </div>
+          </div>
+        ) : messages.map((message) => (
           <motion.div
             key={message.id}
             initial={{ opacity: 0, y: 15, filter: "blur(5px)" }}

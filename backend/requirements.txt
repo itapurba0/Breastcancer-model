@@ -21,3 +21,5 @@ pypdf
 openai
 qdrant-client
 dotenv
+pymongo
+pyjwt

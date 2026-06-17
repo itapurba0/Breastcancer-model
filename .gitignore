@@ -6,3 +6,4 @@ high_confidence.json
 backend/.env
 backend/chatbot/.env
 .agents
+.opencode

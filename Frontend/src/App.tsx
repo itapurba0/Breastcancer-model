@@ -6,8 +6,10 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Index from "./pages/Index";
 import Classification from "./pages/Classification";
 import Chatbot from "./pages/Chatbot";
+import Auth from "./pages/Auth";
 import NotFound from "./pages/NotFound";
-import GlobalLayout from "@/components/layout/GlobalLayout";
+import { AuthProvider } from "@/contexts/AuthContext";
+import ProtectedRoute from "@/components/auth/ProtectedRoute";
 
 const queryClient = new QueryClient();
 
@@ -19,14 +21,15 @@ const App = () => {
         <Toaster />
         <Sonner />
         <BrowserRouter>
-          <GlobalLayout>
+          <AuthProvider>
             <Routes>
               <Route path="/" element={<Index />} />
               <Route path="/classification" element={<Classification />} />
-              <Route path="/chatbot" element={<Chatbot />} />
+              <Route path="/login" element={<Auth />} />
+              <Route path="/chatbot" element={<ProtectedRoute><Chatbot /></ProtectedRoute>} />
               <Route path="*" element={<NotFound />} />
             </Routes>
-          </GlobalLayout>
+          </AuthProvider>
         </BrowserRouter>
       </TooltipProvider>
     </QueryClientProvider>
