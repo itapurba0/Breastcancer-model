@@ -1,11 +1,11 @@
 import { useState, useCallback } from "react";
 import {
-  Upload, X, Image as ImageIcon, Loader2, AlertCircle, CheckCircle,
-  Microscope, Sparkles, Activity, ShieldCheck, FileText, Printer, User, FileOutput
+  X, Image as ImageIcon, Loader2, AlertCircle, CheckCircle,
+  Microscope, Activity, ShieldCheck, FileText, Printer, User, FileOutput,
+  Eye
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
@@ -286,43 +286,64 @@ const ImageUploader = () => {
             {/* The standard dashboard UI (Hidden during printing) */}
             <div className="print:hidden space-y-8">
 
-              <div className="flex flex-col md:flex-row items-start gap-6 border-b border-brand/10 pb-8">
+              <div className="flex flex-col md:flex-row items-center gap-6 border-b border-brand/10 pb-8">
                 {(() => {
                   const isFailed = result.prediction.toLowerCase().includes("fail");
                   const isNormal = result.prediction.toLowerCase().includes("normal");
                   const isBenign = result.prediction.toLowerCase().includes("benign");
 
-                  let badgeClass = "bg-secondary text-secondary-foreground";
-                  if (isNormal) {
-                    badgeClass = "bg-muted text-muted-foreground";
-                  } else if (isBenign) {
-                    badgeClass = "bg-accent text-accent-foreground";
-                  }
+                  const gaugeColor = isNormal || isBenign
+                    ? "var(--color-primary)"
+                    : isFailed
+                      ? "var(--color-muted-foreground)"
+                      : "var(--color-secondary)";
+                  const circumference = 2 * Math.PI * 36;
+                  const dashOffset = circumference - (result.confidence / 100) * circumference;
 
                   return (
-                    <div className="flex items-start gap-4 p-5 rounded-2xl border-l-4 border-l-primary bg-primary/5 w-full">
-                      <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-primary/10">
-                        {isNormal || isBenign ? <CheckCircle className="h-6 w-6 text-primary" /> : <AlertCircle className="h-6 w-6 text-secondary" />}
-                      </div>
-                      <div className="flex-1 space-y-3">
+                    <div className="flex items-center gap-6 w-full">
+                      {/* Circular Confidence Gauge */}
+                      {!isFailed && (
+                        <div className="relative shrink-0">
+                          <svg width="88" height="88" viewBox="0 0 88 88" className="-rotate-90">
+                            <circle cx="44" cy="44" r="36" fill="none" stroke="currentColor" strokeWidth="6"
+                              className="text-muted/60" />
+                            <motion.circle
+                              cx="44" cy="44" r="36" fill="none" stroke={gaugeColor} strokeWidth="6"
+                              strokeLinecap="round"
+                              strokeDasharray={circumference}
+                              initial={{ strokeDashoffset: circumference }}
+                              animate={{ strokeDashoffset: dashOffset }}
+                              transition={{ duration: 1.2, ease: "easeOut", delay: 0.2 }}
+                            />
+                          </svg>
+                          <div className="absolute inset-0 flex flex-col items-center justify-center">
+                            <span className="text-lg font-heading font-bold text-foreground leading-none">{result.confidence}</span>
+                            <span className="text-[10px] text-muted-foreground font-sans mt-0.5">%</span>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Prediction Info */}
+                      <div className="flex-1 space-y-2">
                         <div>
-                          <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Diagnostic result</p>
-                          <div className="flex items-center gap-3 mt-1">
-                            <Badge className={cn("text-sm font-bold", badgeClass)}>
+                          <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide font-sans">Diagnostic result</p>
+                          <div className="flex items-center gap-3 mt-1.5">
+                            <span className={cn(
+                              "text-base font-heading font-bold tracking-tight px-3 py-1 rounded-lg",
+                              isFailed ? "text-muted-foreground bg-muted" :
+                              isNormal ? "text-primary bg-primary/10" :
+                              isBenign ? "text-primary bg-primary/8" :
+                              "text-secondary-foreground bg-secondary/90"
+                            )}>
                               {result.prediction}
-                            </Badge>
+                            </span>
                           </div>
                         </div>
                         {!isFailed && (
-                          <div className="space-y-1.5">
-                            <div className="flex items-center justify-between">
-                              <span className="text-xs text-muted-foreground">Confidence</span>
-                              <span className="text-xs font-semibold text-foreground">{result.confidence}%</span>
-                            </div>
-                            <div className="h-2 rounded-full bg-muted overflow-hidden">
-                              <div className="h-full bg-primary rounded-full transition-all duration-700" style={{ width: `${result.confidence}%` }} />
-                            </div>
-                          </div>
+                          <p className="text-xs text-muted-foreground font-sans">
+                            Model confidence for this classification
+                          </p>
                         )}
                       </div>
                     </div>
@@ -334,29 +355,35 @@ const ImageUploader = () => {
                 <>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="space-y-2">
-                      <p className="text-xs font-medium text-muted-foreground">Original scan</p>
+                      <div className="flex items-center gap-1.5">
+                        <Eye className="h-3.5 w-3.5 text-primary" />
+                        <p className="text-xs font-semibold text-foreground uppercase tracking-wide font-sans">Original scan</p>
+                      </div>
                       <div className="rounded-2xl overflow-hidden bg-muted/50 flex items-center justify-center aspect-square border border-primary/10">
                         <img src={selectedImage!} alt="Original scan" className="max-h-full max-w-full object-contain" />
                       </div>
                     </div>
                     <div className="space-y-2">
-                      <p className="text-xs font-medium text-muted-foreground">Activation heatmap</p>
+                      <div className="flex items-center gap-1.5">
+                        <Activity className="h-3.5 w-3.5 text-primary" />
+                        <p className="text-xs font-semibold text-foreground uppercase tracking-wide font-sans">AI attention map</p>
+                      </div>
                       <div className="rounded-2xl overflow-hidden bg-muted/50 flex items-center justify-center aspect-square border border-primary/10 relative">
                         {result.gradcam ? (
                           <img src={result.gradcam} alt="Heatmap" className="max-h-full max-w-full object-contain mix-blend-multiply" />
                         ) : (
-                          <p className="text-xs text-muted-foreground p-4 text-center">Heatmap not available for this image</p>
+                          <p className="text-xs text-muted-foreground p-4 text-center font-sans">Not available for this image</p>
                         )}
                       </div>
                     </div>
                   </div>
 
                   {result.triage && (
-                    <div className="report-triage rounded-2xl">
-                      <div className="flex items-center justify-between mb-3">
-                        <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Risk assessment</span>
+                    <div className="report-triage rounded-2xl p-5 border-l-4 border-l-primary bg-primary/5 space-y-3">
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs font-semibold text-foreground uppercase tracking-wide font-sans">Risk assessment</span>
                         <span className={cn(
-                          "px-3 py-1 rounded-full text-xs font-semibold",
+                          "px-3 py-1 rounded-full text-xs font-bold",
                           result.triage.tier === "high concern" ? "bg-red-50 text-red-700 border border-red-200" :
                           result.triage.tier === "moderate confidence" ? "bg-amber-50 text-amber-700 border border-amber-200" :
                           "bg-primary/10 text-primary border border-primary/20"
@@ -364,24 +391,24 @@ const ImageUploader = () => {
                           {result.triage.tier}
                         </span>
                       </div>
-                      <p className="text-sm font-semibold text-foreground mb-1">{result.triage.recommendation}</p>
-                      <p className="text-sm text-muted-foreground">{result.triage.rationale}</p>
+                      <p className="text-sm font-semibold text-foreground leading-snug">{result.triage.recommendation}</p>
+                      <p className="text-sm text-muted-foreground font-sans leading-relaxed">{result.triage.rationale}</p>
                     </div>
                   )}
                 </>
               )}
 
               {reportStep === "hidden" && (
-                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-t border-brand/10 pt-6 mt-6">
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-t border-brand/10 pt-6">
                   <div className="flex items-start gap-3">
-                    <ShieldCheck className="h-5 w-5 text-brand shrink-0 mt-0.5" />
-                    <p className="text-xs sm:text-sm text-muted-foreground font-sans leading-relaxed font-semibold max-w-sm">
-                      Predictions are triage aids. Generate a clinical report to attach demographic data and export for professional review.
+                    <ShieldCheck className="h-5 w-5 text-primary shrink-0 mt-0.5" />
+                    <p className="text-xs sm:text-sm text-muted-foreground font-sans leading-relaxed max-w-sm">
+                      AI triage aid. Generate a clinical report to attach patient data and export for professional review.
                     </p>
                   </div>
                   <Button
                     onClick={() => setReportStep("form")}
-                    className="w-full sm:w-auto bg-primary text-white hover:bg-primary/90 rounded-full text-sm px-6 py-5 soft-shadow-sm flex items-center gap-2"
+                    className="w-full sm:w-auto bg-primary text-white hover:bg-primary/90 rounded-full text-sm px-6 py-5 flex items-center gap-2"
                   >
                     <FileText className="h-4 w-4" />
                     Export clinical report
@@ -397,8 +424,8 @@ const ImageUploader = () => {
                     className="bg-muted/50 rounded-2xl p-6 border border-brand/15 space-y-4"
                   >
                     <div className="flex items-center gap-2 mb-4 border-b border-brand/10 pb-3">
-                      <User className="h-4 w-4 text-brand" />
-                      <h4 className="font-bold font-mono text-xs text-foreground">Patient demographics</h4>
+                      <User className="h-4 w-4 text-primary" />
+                      <h4 className="font-bold font-sans text-sm text-foreground">Patient demographics</h4>
                     </div>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       <div className="space-y-1.5">
