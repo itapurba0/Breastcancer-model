@@ -43,6 +43,7 @@ const SourcesPanel = ({ sources }: { sources: Source[] }) => {
       <button
         onClick={() => setIsExpanded(!isExpanded)}
         className="flex items-center gap-1.5 text-brand font-mono tracking-wide hover:opacity-80 transition-opacity"
+        aria-label={isExpanded ? "Close sources" : "Show sources"}
       >
         <ChevronDown
           className={cn(
@@ -260,10 +261,10 @@ const ChatInterface = () => {
             <Bot className="h-5 w-5 text-brand" />
           </div>
           <div>
-            <h3 className="font-bold text-foreground font-heading text-sm">NEURAL_MED_CHAT</h3>
-            <p className="text-xs text-muted-foreground flex items-center gap-1.5 font-mono">
+            <h3 className="font-bold text-foreground font-heading text-sm">Medical Assistant</h3>
+            <p className="text-xs text-muted-foreground flex items-center gap-1.5 font-sans">
               <span className="w-1.5 h-1.5 rounded-full bg-sage animate-pulse" />
-              RAG_MODEL_ONLINE
+              Data encrypted end-to-end
             </p>
           </div>
         </div>
@@ -275,6 +276,7 @@ const ChatInterface = () => {
             onClick={logout}
             className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[10px] font-mono text-muted-foreground hover:text-foreground border border-transparent hover:border-brand/10 hover:bg-muted/60 transition-all duration-300"
             title="Sign out"
+            aria-label="Logout"
           >
             <LogOut className="h-3.5 w-3.5" />
             <span className="hidden sm:inline">Sign out</span>
@@ -282,12 +284,12 @@ const ChatInterface = () => {
         </div>
       </div>
 
-      <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-6 bg-white">
+      <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-6 bg-white" role="log" aria-live="polite">
         {chatLoading ? (
           <div className="flex items-center justify-center h-full">
             <div className="flex items-center gap-2 text-muted-foreground">
               <Loader2 className="h-5 w-5 animate-spin text-brand" />
-              <span className="text-xs font-mono font-bold">LOADING_HISTORY...</span>
+              <span className="text-xs font-sans font-bold">Loading history...</span>
             </div>
           </div>
         ) : messages.map((message) => (
@@ -320,8 +322,8 @@ const ChatInterface = () => {
               className={cn(
                 "max-w-[90%] sm:max-w-[82%] md:max-w-[78%] rounded-3xl px-4 sm:px-5 py-3.5 border relative bg-white",
                 message.role === "user"
-                  ? "bg-secondary/10 text-foreground border-secondary/20 rounded-tr-sm"
-                  : "bg-white text-foreground border-brand/10 rounded-tl-sm soft-shadow-sm"
+                  ? "bg-primary/10 text-foreground border-secondary/20 rounded-tr-sm"
+                  : "bg-muted text-foreground border-brand/10 rounded-tl-sm soft-shadow-sm"
               )}
             >
               {message.role === "assistant" && (
@@ -396,9 +398,9 @@ const ChatInterface = () => {
 
       {messages.length === 1 && (
         <div className="px-4 sm:px-6 pb-4 pt-2">
-          <p className="text-xs text-muted-foreground mb-3 flex items-center gap-1.5 font-mono">
+          <p className="text-xs text-muted-foreground mb-3 flex items-center gap-1.5 font-sans">
             <Sparkles className="h-3.5 w-3.5 text-brand" />
-            [QUICK_QUERY_PROMPTS]
+            Suggested questions
           </p>
           <div className="flex flex-wrap gap-2">
             {suggestedQuestions.map((question, index) => (
@@ -434,6 +436,7 @@ const ChatInterface = () => {
             variant="medical"
             size="icon"
             className="h-12 w-12 shrink-0 bg-brand text-white hover:scale-105 transition-transform duration-300 soft-shadow-sm"
+            aria-label="Send message"
           >
             {isTyping ? (
               <Loader2 className="h-5 w-5 animate-spin" />
