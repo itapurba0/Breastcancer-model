@@ -112,7 +112,7 @@ const ParticleNet = () => {
     <points ref={pointsRef} geometry={geometry}>
       <pointsMaterial
         size={0.075}
-        color="#78909C" // Sophisticated blue-gray matching light theme
+        color="#2D6A4F" // Sage green matching palette
         transparent
         opacity={0.16}  // Low opacity to keep it extremely subtle
         sizeAttenuation
@@ -133,7 +133,7 @@ const HeroCanvas = () => {
   const FallbackVoid = (
     <div className="fixed inset-0 z-[-1] pointer-events-none bg-white">
       <div className="absolute inset-0" style={{
-        background: "radial-gradient(circle at center, rgba(120, 144, 156, 0.04) 0%, rgba(250, 250, 250, 0.95) 80%)"
+        background: "radial-gradient(circle at center, rgba(45, 106, 79, 0.04) 0%, rgba(247, 246, 243, 0.95) 80%)"
       }} />
     </div>
   );
@@ -147,7 +147,7 @@ const HeroCanvas = () => {
   }
 
   return (
-    <div className="fixed inset-0 z-[-1] pointer-events-none bg-gradient-to-b from-white via-[#FAFAFA] to-[#FAF9F6]">
+    <div className="fixed inset-0 z-[-1] pointer-events-none bg-gradient-to-b from-[#FEFDFB] via-[#F7F6F3] to-[#FEFDFB]">
       <div className="absolute inset-0 bg-radial-gradient z-[1] opacity-50" style={{
         background: "radial-gradient(circle at center, rgba(255, 255, 255, 0.1) 0%, rgba(250, 250, 250, 0.7) 100%)"
       }} />
