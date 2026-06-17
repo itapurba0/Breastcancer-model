@@ -1,5 +1,8 @@
 import { useState, useCallback } from "react";
-import { Upload, X, Image as ImageIcon, Loader2, AlertCircle, CheckCircle, Microscope, Sparkles, Activity, ShieldCheck, HeartPulse } from "lucide-react";
+import {
+  Upload, X, Image as ImageIcon, Loader2, AlertCircle, CheckCircle,
+  Microscope, Sparkles, Activity, ShieldCheck, FileText, Printer, User, FileOutput
+} from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -17,12 +20,28 @@ interface ClassificationResult {
   };
 }
 
+interface PatientDetails {
+  patientName: string;
+  patientAge: string;
+  patientId: string;
+  clinicalNotes: string;
+}
+
 const ImageUploader = () => {
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [isDragging, setIsDragging] = useState(false);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [result, setResult] = useState<ClassificationResult | null>(null);
+
+  // Report Generation States
+  const [reportStep, setReportStep] = useState<"hidden" | "form" | "preview">("hidden");
+  const [patientData, setPatientData] = useState<PatientDetails>({
+    patientName: "",
+    patientAge: "",
+    patientId: "",
+    clinicalNotes: "",
+  });
 
   const handleDragOver = useCallback((e: React.DragEvent) => {
     e.preventDefault();
@@ -53,6 +72,7 @@ const ImageUploader = () => {
   const processFile = (file: File) => {
     setSelectedFile(file);
     setResult(null);
+    setReportStep("hidden");
     const reader = new FileReader();
     reader.onload = (e) => {
       setSelectedImage(e.target?.result as string);
@@ -64,6 +84,11 @@ const ImageUploader = () => {
     setSelectedImage(null);
     setSelectedFile(null);
     setResult(null);
+    setReportStep("hidden");
+  };
+
+  const handlePatientDataChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    setPatientData({ ...patientData, [e.target.name]: e.target.value });
   };
 
   const analyzeImage = async () => {
@@ -71,6 +96,8 @@ const ImageUploader = () => {
 
     setIsAnalyzing(true);
     setResult(null);
+    setReportStep("hidden");
+
     try {
       const formData = new FormData();
       formData.append("file", selectedFile, selectedFile.name);
@@ -91,7 +118,6 @@ const ImageUploader = () => {
       }
 
       const json = await res.json();
-
       const rawConfidence = Number(json.confidence ?? 0);
       const normalizedConfidence = Number.isFinite(rawConfidence)
         ? Math.round((rawConfidence <= 1 ? rawConfidence * 100 : rawConfidence))
@@ -125,12 +151,11 @@ const ImageUploader = () => {
         whileHover={{ y: -4, scale: 1.01 }}
         transition={{ type: "tween", ease: "easeOut", duration: 0.35 }}
         className={cn(
-          "glass-panel rounded-3xl p-8 overflow-hidden relative transition-transform duration-300 bg-white",
+          "glass-panel rounded-3xl p-8 overflow-hidden relative transition-transform duration-300 bg-white print:hidden",
           isDragging ? "border-highlight bg-muted/50 soft-shadow-md" : "border-brand/15 hover:border-brand/40",
           selectedImage && "border-brand/25"
         )}
       >
-        {/* Subtle light corner glows */}
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-48 h-48 bg-[#FFE082]/5 rounded-full blur-3xl pointer-events-none" />
 
         {!selectedImage ? (
@@ -165,25 +190,17 @@ const ImageUploader = () => {
                 alt="Selected tissue scan"
                 className="max-h-full max-w-full object-contain"
               />
-
-              {/* Holographic Laser Grid Scanner Overlay */}
               {isAnalyzing && (
                 <div className="absolute inset-0 bg-highlight/[0.02] pointer-events-none overflow-hidden z-10">
                   <motion.div
                     initial={{ y: "-10%" }}
                     animate={{ y: "110%" }}
-                    transition={{
-                      repeat: Infinity,
-                      repeatType: "reverse",
-                      duration: 1.8,
-                      ease: "easeInOut",
-                    }}
+                    transition={{ repeat: Infinity, repeatType: "reverse", duration: 1.8, ease: "easeInOut" }}
                     className="w-full h-1.5 bg-gradient-to-r from-transparent via-highlight to-transparent"
                   />
                   <div className="absolute inset-0 bg-gradient-to-b from-highlight/0 via-highlight/6 to-highlight/0 opacity-30" />
                 </div>
               )}
-
               <button
                 onClick={clearImage}
                 disabled={isAnalyzing}
@@ -202,15 +219,9 @@ const ImageUploader = () => {
                 className="h-12 px-6 bg-highlight hover:bg-highlight/95 border border-highlight/40 text-foreground transition-transform duration-300 font-sans font-semibold rounded-3xl flex items-center gap-2 soft-shadow-sm"
               >
                 {isAnalyzing ? (
-                  <>
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                    Executing Deep Inference...
-                  </>
+                  <><Loader2 className="h-4 w-4 animate-spin" /> Executing Deep Inference...</>
                 ) : (
-                  <>
-                    <Microscope className="h-4 w-4" />
-                    Initialize Deep Inference
-                  </>
+                  <><Microscope className="h-4 w-4" /> Initialize Deep Inference</>
                 )}
               </Button>
             </div>
@@ -226,11 +237,8 @@ const ImageUploader = () => {
             animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
             exit={{ opacity: 0, y: -15, filter: "blur(5px)" }}
             transition={{ duration: 0.45, ease: "easeOut" }}
-            className="glass-panel rounded-3xl p-6 border border-brand/15 soft-shadow-md relative overflow-hidden bg-white"
+            className="glass-panel rounded-3xl p-6 border border-brand/15 soft-shadow-md relative overflow-hidden bg-white print:hidden"
           >
-            {/* Pulsing light */}
-            <div className="absolute inset-0 bg-highlight/[0.02] animate-pulse pointer-events-none" />
-
             <div className="flex items-center gap-4 relative z-10">
               <div className="relative flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-white border border-brand/15 soft-shadow-sm">
                 <motion.div
@@ -250,30 +258,11 @@ const ImageUploader = () => {
                 </p>
               </div>
             </div>
-
-            {/* Log logs */}
-            <div className="mt-5 relative">
-              <div className="h-2 bg-muted rounded-full overflow-hidden">
-                <motion.div
-                  initial={{ width: "0%" }}
-                  animate={{ width: "95%" }}
-                  transition={{
-                    duration: 5.5,
-                    ease: "easeOut",
-                  }}
-                  className="h-full bg-gradient-to-r from-[#78909C] via-[#FFE082] to-[#78909C] rounded-full"
-                />
-              </div>
-              <div className="flex justify-between text-[9px] text-[#616161] mt-2.5 font-mono tracking-wide font-bold">
-                <span>[STACK_01] TENSOR_NORMALIZATION</span>
-                <span>[STACK_02] GRAD_CAM_SALIENCY</span>
-              </div>
-            </div>
           </motion.div>
         )}
       </AnimatePresence>
 
-      {/* 3. Frosted Clinical Result Panel */}
+      {/* 3. Main Result Panel & Report Generator */}
       <AnimatePresence>
         {result && (
           <motion.div
@@ -283,117 +272,266 @@ const ImageUploader = () => {
             transition={{ duration: 0.55, ease: "easeOut" }}
             className="glass-panel rounded-3xl p-8 md:p-10 border border-brand/20 soft-shadow-lg relative overflow-hidden space-y-8 bg-white"
           >
-            {/* Background highlight */}
-            <div className="absolute -top-32 -right-32 w-64 h-64 bg-[#FFE082]/5 rounded-full blur-3xl pointer-events-none" />
+            {/* The standard dashboard UI (Hidden during printing) */}
+            <div className="print:hidden space-y-8">
 
-            {/* Top Section: Status Badge & Prediction Verdict */}
-            <div className="flex flex-col md:flex-row items-start gap-6 border-b border-slate-100 pb-8">
-              {(() => {
-                const isFailed = result.prediction.toLowerCase().includes("fail");
-                const isNormal = result.prediction.toLowerCase().includes("normal");
-                const isBenign = result.prediction.toLowerCase().includes("benign");
+              {/* Top Section: Prediction Verdict */}
+              <div className="flex flex-col md:flex-row items-start gap-6 border-b border-slate-100 pb-8">
+                {(() => {
+                  const isFailed = result.prediction.toLowerCase().includes("fail");
+                  const isNormal = result.prediction.toLowerCase().includes("normal");
+                  const isBenign = result.prediction.toLowerCase().includes("benign");
 
-                let accentColor = "text-red-700 border-red-200 bg-red-50/70";
-                if (isNormal) {
-                  accentColor = "text-[#37474F] border-[#78909C]/20 bg-[#78909C]/10";
-                } else if (isBenign) {
-                  accentColor = "text-[#004D40] border-[#E0F2F1]/80 bg-[#E0F2F1]/80";
-                }
+                  let accentColor = "text-red-700 border-red-200 bg-red-50/70";
+                  if (isNormal) {
+                    accentColor = "text-[#37474F] border-[#78909C]/20 bg-[#78909C]/10";
+                  } else if (isBenign) {
+                    accentColor = "text-[#004D40] border-[#E0F2F1]/80 bg-[#E0F2F1]/80";
+                  }
 
-                return (
-                  <>
-                    <div className={cn(
-                      "flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl border",
-                      accentColor
-                    )}>
-                      {isNormal || isBenign ? (
-                        <CheckCircle className="h-6 w-6 stroke-[2px]" />
-                      ) : (
-                        <AlertCircle className="h-6 w-6 stroke-[2px]" />
-                      )}
-                    </div>
-                    <div className="flex-1 space-y-4">
-                      <div className="flex flex-wrap items-center gap-3">
-                        <span className="text-[10px] font-mono text-[#616161] uppercase tracking-widest font-bold">[ DIAGNOSTIC_PREDICTION ]</span>
-                        <h3 className="text-2xl md:text-3xl font-black text-[#333333] font-heading tracking-tight w-full md:w-auto leading-none">
-                          {result.prediction.toUpperCase()}
-                        </h3>
-                        {!isFailed && (
-                          <span className="px-3.5 py-1 rounded-full text-xs font-mono font-bold tracking-tight border border-[#FFE082] bg-[#FFE082]/30 text-[#455A64]">
-                            {result.confidence}% CONFIDENCE_SCORE
-                          </span>
-                        )}
+                  return (
+                    <>
+                      <div className={cn("flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl border", accentColor)}>
+                        {isNormal || isBenign ? <CheckCircle className="h-6 w-6 stroke-[2px]" /> : <AlertCircle className="h-6 w-6 stroke-[2px]" />}
                       </div>
+                      <div className="flex-1 space-y-4">
+                        <div className="flex flex-wrap items-center gap-3">
+                          <span className="text-[10px] font-mono text-[#616161] uppercase tracking-widest font-bold">[ DIAGNOSTIC_PREDICTION ]</span>
+                          <h3 className="text-2xl md:text-3xl font-black text-[#333333] font-heading tracking-tight w-full md:w-auto leading-none">
+                            {result.prediction.toUpperCase()}
+                          </h3>
+                          {!isFailed && (
+                            <span className="px-3.5 py-1 rounded-full text-xs font-mono font-bold tracking-tight border border-[#FFE082] bg-[#FFE082]/30 text-[#455A64]">
+                              {result.confidence}% CONFIDENCE_SCORE
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    </>
+                  );
+                })()}
+              </div>
 
-                      <p className="text-xs md:text-sm text-[#616161] leading-relaxed font-sans font-semibold">
-                        Explainable visual overlays (Grad-CAM) are calculated to map mathematical weights. The heat signals denote visual tissue coordinates that mathematically informed the neural output.
-                      </p>
+              {/* RESTORED: Main Dashboard Grad-CAM Visualizer */}
+              {reportStep === "hidden" && (
+                <>
+                  <div className="flex flex-col items-center justify-center gap-4 w-full">
+                    <div className="w-full max-w-xl glass-panel rounded-3xl p-6 border border-[#78909C]/15 shadow-sm bg-slate-50/50 flex flex-col gap-4">
+                      <span className="text-[10px] font-mono text-[#616161] uppercase tracking-widest flex items-center justify-center gap-2 font-bold">
+                        <Sparkles className="h-4 w-4 text-[#78909C] animate-pulse" />
+                        EXPLAINABLE_GRAD_CAM_MAP
+                      </span>
+                      <div className="overflow-hidden rounded-2xl bg-slate-100/80 flex items-center justify-center h-80 border border-[#78909C]/10 relative shadow-inner">
+                        {result.gradcam ? (
+                          <img
+                            src={result.gradcam}
+                            alt="Tissue activation heatmap mapping"
+                            className="max-h-full max-w-full object-contain mix-blend-multiply"
+                          />
+                        ) : (
+                          <div className="px-4 text-center text-xs text-[#616161] font-sans font-semibold">
+                            Grad-CAM explanation mapping is not available.
+                          </div>
+                        )}
+                        <div className="absolute bottom-3 left-3 px-3 py-1 rounded-full bg-white/90 backdrop-blur-sm text-[9px] font-mono text-[#455A64] border border-[#78909C]/20 font-bold shadow-sm">
+                          HEATMAP_SALIENCY_VIEW
+                        </div>
+                      </div>
                     </div>
-                  </>
-                );
-              })()}
-            </div>
+                  </div>
 
-            {/* Middle Section: Central Solitary Grad-CAM Heatmap Visual Focus */}
-            <div className="flex flex-col items-center justify-center gap-4 w-full">
-              <div className="w-full max-w-xl glass-panel rounded-3xl p-6 border border-[#78909C]/15 shadow-sm bg-slate-50/50 flex flex-col gap-4">
-                <span className="text-[10px] font-mono text-[#616161] uppercase tracking-widest flex items-center justify-center gap-2 font-bold">
-                  <Sparkles className="h-4 w-4 text-[#78909C] animate-pulse" />
-                  EXPLAINABLE_GRAD_CAM_MAP
-                </span>
-                <div className="overflow-hidden rounded-2xl bg-slate-100/80 flex items-center justify-center h-80 border border-[#78909C]/10 relative shadow-inner">
-                  {result.gradcam ? (
-                    <img
-                      src={result.gradcam}
-                      alt="Tissue activation heatmap mapping"
-                      className="max-h-full max-w-full object-contain"
-                    />
-                  ) : (
-                    <div className="px-4 text-center text-xs text-[#616161] font-sans font-semibold">
-                      Grad-CAM explanation mapping is not available for this session index.
+                  {/* RESTORED: Main Dashboard Triage Index */}
+                  {result.triage && (
+                    <div className="p-6 md:p-8 rounded-[2rem] bg-slate-50/60 border border-slate-100 space-y-4">
+                      <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+                        <span className="text-[10px] font-mono text-[#616161] uppercase tracking-widest font-bold">[ RISK_TRIAGE_INDEX ]</span>
+                        <span className={cn(
+                          "px-3 py-1 rounded-full text-[10px] font-mono font-bold uppercase tracking-wider",
+                          result.triage.tier === "high concern"
+                            ? "bg-red-50 text-red-700 border border-red-200"
+                            : result.triage.tier === "moderate confidence"
+                              ? "bg-amber-50 text-amber-800 border border-amber-200"
+                              : "bg-slate-100 text-[#455A64] border border-[#78909C]/25"
+                        )}>
+                          {result.triage.tier}
+                        </span>
+                      </div>
+                      <div className="space-y-2">
+                        <h4 className="text-sm md:text-base font-bold text-[#333333] font-heading tracking-tight leading-snug">
+                          Recommendation: {result.triage.recommendation}
+                        </h4>
+                        <p className="text-xs md:text-sm text-[#616161] leading-relaxed font-sans font-semibold">
+                          {result.triage.rationale}
+                        </p>
+                      </div>
                     </div>
                   )}
-                  <div className="absolute bottom-3 left-3 px-3 py-1 rounded-full bg-white/90 backdrop-blur-sm text-[9px] font-mono text-[#455A64] border border-[#78909C]/20 font-bold shadow-2xs">
-                    HEATMAP_SALIENCY_VIEW
+                </>
+              )}
+
+              {/* Triage & Report Action Area */}
+              {reportStep === "hidden" && (
+                <div className="pt-2 flex flex-col sm:flex-row items-center justify-between gap-4 border-t border-slate-100 mt-6">
+                  <div className="flex items-start gap-3 mt-4">
+                    <ShieldCheck className="h-5 w-5 text-[#78909C] shrink-0 mt-0.5" />
+                    <p className="text-[10px] md:text-xs text-[#616161] font-sans leading-relaxed font-semibold max-w-sm">
+                      Predictions are triage aids. Generate a clinical report to attach demographic data and export for professional review.
+                    </p>
                   </div>
+                  <Button
+                    onClick={() => setReportStep("form")}
+                    className="w-full sm:w-auto bg-[#37474F] text-white hover:bg-[#263238] rounded-full font-mono text-xs px-6 py-5 soft-shadow-sm flex items-center gap-2 mt-4"
+                  >
+                    <FileText className="h-4 w-4" />
+                    GENERATE CLINICAL REPORT
+                  </Button>
                 </div>
-              </div>
+              )}
+
+              {/* Patient Details Form */}
+              <AnimatePresence>
+                {reportStep === "form" && (
+                  <motion.div
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: "auto" }}
+                    className="bg-slate-50/80 rounded-2xl p-6 border border-brand/15 space-y-4"
+                  >
+                    <div className="flex items-center gap-2 mb-4 border-b border-brand/10 pb-3">
+                      <User className="h-4 w-4 text-brand" />
+                      <h4 className="font-bold font-mono text-xs text-[#455A64]">PATIENT DEMOGRAPHICS</h4>
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <input type="text" name="patientName" placeholder="Full Name" value={patientData.patientName} onChange={handlePatientDataChange} className="w-full rounded-xl border border-brand/15 px-4 py-2 text-sm focus:ring-1 focus:ring-brand outline-none" />
+                      <input type="text" name="patientAge" placeholder="Age / DOB" value={patientData.patientAge} onChange={handlePatientDataChange} className="w-full rounded-xl border border-brand/15 px-4 py-2 text-sm focus:ring-1 focus:ring-brand outline-none" />
+                      <input type="text" name="patientId" placeholder="Patient ID / Ref Number" value={patientData.patientId} onChange={handlePatientDataChange} className="w-full rounded-xl border border-brand/15 px-4 py-2 text-sm focus:ring-1 focus:ring-brand outline-none" />
+                      <input type="text" name="clinicalNotes" placeholder="Initial Clinical Notes (Optional)" value={patientData.clinicalNotes} onChange={handlePatientDataChange} className="w-full rounded-xl border border-brand/15 px-4 py-2 text-sm focus:ring-1 focus:ring-brand outline-none" />
+                    </div>
+                    <div className="flex justify-end gap-3 pt-4">
+                      <Button variant="outline" onClick={() => setReportStep("hidden")} className="rounded-full text-xs font-mono">CANCEL</Button>
+                      <Button onClick={() => setReportStep("preview")} className="rounded-full bg-brand hover:bg-brand/90 text-white text-xs font-mono flex items-center gap-2">
+                        <FileOutput className="h-4 w-4" /> COMPILE REPORT
+                      </Button>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </div>
 
-            {/* Bottom Section: Risk Triage Index & Recommendations */}
-            {result.triage && (
-              <div className="p-6 md:p-8 rounded-[2rem] bg-slate-50/60 border border-slate-100 space-y-4">
-                <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-                  <span className="text-[10px] font-mono text-[#616161] uppercase tracking-widest font-bold">[ RISK_TRIAGE_INDEX ]</span>
-                  <span className={cn(
-                    "px-3 py-1 rounded-full text-[10px] font-mono font-bold uppercase tracking-wider",
-                    result.triage.tier === "high concern"
-                      ? "bg-red-50 text-red-700 border border-red-200"
-                      : result.triage.tier === "moderate confidence"
-                        ? "bg-amber-50 text-amber-800 border border-amber-200"
-                        : "bg-slate-100 text-[#455A64] border border-[#78909C]/25"
-                  )}>
-                    {result.triage.tier}
-                  </span>
-                </div>
-                <div className="space-y-2">
-                  <h4 className="text-sm md:text-base font-bold text-[#333333] font-heading tracking-tight leading-snug">
-                    Recommendation: {result.triage.recommendation}
-                  </h4>
-                  <p className="text-xs md:text-sm text-[#616161] leading-relaxed font-sans font-semibold">
-                    {result.triage.rationale}
-                  </p>
-                </div>
-              </div>
-            )}
+            {/* --- ACTUAL REPORT PREVIEW (Visible here AND during printing) --- */}
+            <AnimatePresence>
+              {reportStep === "preview" && (
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  className="bg-white rounded-none md:rounded-2xl border-t-4 border-t-[#37474F] shadow-sm border border-slate-200 p-8 md:p-12 print:p-0 print:border-none print:shadow-none font-sans"
+                >
+                  {/* Print Controls (Hidden on paper) */}
+                  <div className="flex justify-between items-center mb-8 pb-4 border-b border-dashed border-slate-300 print:hidden">
+                    <span className="text-xs font-mono font-bold text-[#616161]">DOCUMENT_PREVIEW_MODE</span>
+                    <div className="flex gap-3">
+                      <Button variant="outline" size="sm" onClick={() => setReportStep("form")} className="rounded-full">Edit Details</Button>
+                      <Button size="sm" onClick={() => window.print()} className="rounded-full bg-[#37474F] hover:bg-[#263238] flex gap-2">
+                        <Printer className="h-4 w-4" /> Print / Save PDF
+                      </Button>
+                    </div>
+                  </div>
 
-            {/* Footer Compliance Warnings */}
-            <div className="pt-6 border-t border-slate-100 flex items-start gap-3">
-              <ShieldCheck className="h-5 w-5 text-[#78909C] shrink-0 mt-0.5" />
-              <p className="text-[10px] md:text-xs text-[#616161] font-sans leading-relaxed font-semibold">
-                All inputs are anonymized prior to layer convolutions. Predictions generated are triage aids and must be validated through standard visual biopsies by oncologist teams.
-              </p>
-            </div>
+                  {/* Report Header */}
+                  <div className="flex justify-between items-start mb-8">
+                    <div>
+                      <h1 className="text-2xl font-black text-[#333333] uppercase tracking-tight">AI Diagnostic Scan Report</h1>
+                      <p className="text-sm text-[#616161] font-mono mt-1">Generated: {new Date().toLocaleDateString()} {new Date().toLocaleTimeString()}</p>
+                    </div>
+                    <div className="text-right">
+                      <div className="inline-block px-4 py-2 border-2 border-[#333333] text-[#333333] font-bold uppercase tracking-widest rounded-lg">
+                        {result.prediction}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Patient Info Grid */}
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8 bg-slate-50 p-4 rounded-xl border border-slate-200 break-inside-avoid">
+                    <div>
+                      <p className="text-[10px] text-[#78909C] font-bold uppercase tracking-wider">Patient Name</p>
+                      <p className="font-semibold text-[#333333]">{patientData.patientName || "N/A"}</p>
+                    </div>
+                    <div>
+                      <p className="text-[10px] text-[#78909C] font-bold uppercase tracking-wider">Age/DOB</p>
+                      <p className="font-semibold text-[#333333]">{patientData.patientAge || "N/A"}</p>
+                    </div>
+                    <div>
+                      <p className="text-[10px] text-[#78909C] font-bold uppercase tracking-wider">Patient ID</p>
+                      <p className="font-semibold text-[#333333]">{patientData.patientId || "N/A"}</p>
+                    </div>
+                    <div>
+                      <p className="text-[10px] text-[#78909C] font-bold uppercase tracking-wider">Confidence</p>
+                      <p className="font-semibold text-[#333333]">{result.confidence}% Match</p>
+                    </div>
+                  </div>
+
+                  {/* Side-by-Side Images */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8 break-inside-avoid">
+                    <div className="space-y-2">
+                      <p className="text-xs font-bold text-[#616161] font-mono border-b border-slate-200 pb-2">ORIGINAL SCAN VECTOR</p>
+                      <div className="bg-black/5 rounded-xl flex items-center justify-center p-2 aspect-square border border-slate-200">
+                        <img src={selectedImage!} alt="Original" className="max-h-full max-w-full object-contain rounded-lg mix-blend-multiply" />
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      <p className="text-xs font-bold text-[#616161] font-mono border-b border-slate-200 pb-2">GRAD-CAM ACTIVATION HEATMAP</p>
+                      <div className="bg-black/5 rounded-xl flex items-center justify-center p-2 aspect-square border border-slate-200">
+                        {result.gradcam ? (
+                          <img src={result.gradcam} alt="Heatmap" className="max-h-full max-w-full object-contain rounded-lg mix-blend-multiply" />
+                        ) : (
+                          <p className="text-xs text-[#616161]">No Heatmap Available</p>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Triage & Clinical Notes */}
+                  <div className="space-y-6 mb-8 break-inside-avoid">
+                    {result.triage && (
+                      <div className="p-5 border border-slate-200 rounded-xl bg-white">
+                        <h3 className="text-sm font-bold text-[#333333] uppercase border-b border-slate-100 pb-2 mb-3">AI Triage Assessment</h3>
+                        <p className="text-sm text-[#333333] font-semibold mb-1">Level: <span className="uppercase text-brand">{result.triage.tier}</span></p>
+                        <p className="text-sm text-[#616161] mb-2">{result.triage.recommendation}</p>
+                        <p className="text-xs text-[#78909C] italic">{result.triage.rationale}</p>
+                      </div>
+                    )}
+                    {patientData.clinicalNotes && (
+                      <div>
+                        <h3 className="text-sm font-bold text-[#333333] uppercase border-b border-slate-200 pb-2 mb-2">Physician Notes</h3>
+                        <p className="text-sm text-[#616161]">{patientData.clinicalNotes}</p>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* STRICT CLINICAL DISCLAIMER */}
+                  <div className="mt-12 p-4 border-2 border-red-200 bg-red-50 rounded-xl break-inside-avoid">
+                    <div className="flex gap-3 items-start">
+                      <AlertCircle className="h-6 w-6 text-red-600 shrink-0" />
+                      <div>
+                        <h4 className="text-sm font-bold text-red-800 uppercase tracking-wide">Strict Clinical Disclaimer</h4>
+                        <p className="text-xs text-red-700 mt-1 leading-relaxed font-semibold">
+                          This document is generated by an Artificial Intelligence experimental model. It is <span className="font-black underline">NOT</span> a medical diagnosis. The predictions, heatmaps, and triage recommendations provided are strictly for educational and investigational aid. All findings MUST be reviewed, validated, and officially diagnosed by a board-certified radiologist or oncologist before any clinical decisions are made. Do not alter treatment plans based solely on this automated report.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Signature Line for Print */}
+                  <div className="mt-16 pt-8 border-t border-slate-300 flex justify-between items-end break-inside-avoid hidden print:flex">
+                    <div className="text-xs text-[#78909C]">Ref System ID: {Math.random().toString(36).substr(2, 9).toUpperCase()}</div>
+                    <div className="text-center">
+                      <div className="w-48 border-b border-[#333333] mb-2"></div>
+                      <span className="text-xs font-bold text-[#616161]">Reviewing Physician Signature</span>
+                    </div>
+                  </div>
+
+                </motion.div>
+              )}
+            </AnimatePresence>
           </motion.div>
         )}
       </AnimatePresence>
