@@ -32,25 +32,21 @@ const Classification = () => {
   }
 
   return (
-    <div className="min-h-screen bg-transparent text-[#333333] relative selection:bg-[#FFE082]/40 selection:text-[#333333]">
+    <div className="min-h-screen bg-transparent text-foreground relative selection:bg-secondary/40 selection:text-foreground">
 
-      {/* WRAP THE CANVAS AND HEADER IN A PRINT:HIDDEN DIV */}
       <div className="print:hidden">
-        {/* 3D breathing Neural Net background void */}
         <HeroCanvas />
 
-        {/* Floating Header */}
         <Header />
       </div>
 
-      <main className="container mx-auto px-6 py-12 md:py-16 max-w-4xl relative z-10">
+      <main className="container mx-auto px-4 sm:px-6 py-12 md:py-16 max-w-4xl relative z-10">
         <motion.div
           initial="hidden"
           animate="visible"
           variants={pageVariants}
           className="space-y-12"
         >
-          {/* Refined Upload Terminal */}
           <ImageUploader />
         </motion.div>
       </main>

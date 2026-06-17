@@ -30,7 +30,6 @@ const suggestedQuestions = [
   "Known genetic risk markers for breast cancer?",
 ];
 
-// Frosted Citations Panel
 const SourcesPanel = ({ sources }: { sources: Source[] }) => {
   const [isExpanded, setIsExpanded] = useState(false);
 
@@ -39,10 +38,10 @@ const SourcesPanel = ({ sources }: { sources: Source[] }) => {
   }
 
   return (
-    <div className="mt-3 text-[10px]">
+    <div className="mt-3 text-xs">
       <button
         onClick={() => setIsExpanded(!isExpanded)}
-        className="flex items-center gap-1.5 text-primary text-glow-teal font-mono tracking-wide hover:opacity-80 transition-opacity"
+        className="flex items-center gap-1.5 text-brand font-mono tracking-wide hover:opacity-80 transition-opacity"
       >
         <ChevronDown
           className={cn(
@@ -54,25 +53,25 @@ const SourcesPanel = ({ sources }: { sources: Source[] }) => {
       </button>
 
       {isExpanded && (
-        <div className="mt-3 space-y-2 border-t border-white/5 pt-3">
+        <div className="mt-3 space-y-2 border-t border-brand/10 pt-3">
           {sources.map((source) => (
             <div
               key={source.id}
-              className="bg-black/30 rounded-xl p-3 border border-white/5 space-y-1.5"
+              className="bg-muted rounded-xl p-3 border border-brand/10 space-y-1.5"
             >
               <div className="flex items-start justify-between">
-                <div className="font-bold text-white font-mono uppercase tracking-wide">
+                <div className="font-bold text-foreground font-mono uppercase tracking-wide text-xs">
                   [{source.id}] {source.title}
                 </div>
-                <span className="inline-block px-2 py-0.5 rounded bg-primary/10 border border-primary/20 text-primary text-[8px] font-mono text-glow-teal">
+                <span className="inline-block px-2 py-0.5 rounded bg-brand/10 border border-brand/20 text-brand text-[10px] font-mono">
                   {(source.score * 100).toFixed(0)}% MATCH
                 </span>
               </div>
-              <p className="text-muted-foreground font-sans">
+              <p className="text-muted-foreground font-sans text-xs">
                 {source.source} • chunk #{source.chunk_index}
               </p>
-              <p className="text-muted-foreground italic font-serif leading-relaxed text-[11px] bg-white/[0.01] p-2 rounded-lg border border-white/[0.03]">
-                "{source.text_preview}"
+              <p className="text-muted-foreground font-sans leading-relaxed text-xs bg-white/50 p-2 rounded-lg border border-brand/5">
+                &ldquo;{source.text_preview}&rdquo;
               </p>
             </div>
           ))}
@@ -216,28 +215,26 @@ const ChatInterface = () => {
   };
 
   return (
-    <div className="flex flex-col h-[calc(100vh-12rem)] max-h-[700px] glass-panel rounded-3xl border border-brand/10 soft-shadow-lg overflow-hidden bg-white">
-      {/* Header */}
-      <div className="px-6 py-4 border-b border-brand/8 bg-white flex items-center justify-between">
+    <div className="flex flex-col h-[60vh] min-h-[400px] max-h-[80vh] lg:max-h-[700px] glass-panel rounded-3xl border border-brand/10 soft-shadow-lg overflow-hidden bg-white">
+      <div className="px-4 sm:px-6 py-4 border-b border-brand/10 bg-white flex items-center justify-between">
         <div className="flex items-center gap-3">
           <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-white border border-brand/10 soft-shadow-sm">
             <Bot className="h-5 w-5 text-brand" />
           </div>
           <div>
             <h3 className="font-bold text-foreground font-heading text-sm">NEURAL_MED_CHAT</h3>
-            <p className="text-[10px] text-muted-foreground flex items-center gap-1.5 font-mono">
+            <p className="text-xs text-muted-foreground flex items-center gap-1.5 font-mono">
               <span className="w-1.5 h-1.5 rounded-full bg-sage animate-pulse" />
-              RAG_MODEL_ONLINE • ACTIVE
+              RAG_MODEL_ONLINE
             </p>
           </div>
         </div>
-        <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-muted/60 border border-brand/10 text-[9px] font-mono text-muted-foreground">
+        <div className="hidden sm:flex items-center gap-2 px-3 py-1 rounded-full bg-muted/60 border border-brand/10 text-[10px] font-mono text-muted-foreground">
           <span>QUERY_COUNT: {messages.filter(m => m.role === 'user').length}</span>
         </div>
       </div>
 
-      {/* Messages Display Area */}
-      <div className="flex-1 overflow-y-auto p-6 space-y-6 bg-white">
+      <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-6 bg-white">
         {messages.map((message) => (
           <motion.div
             key={message.id}
@@ -245,15 +242,15 @@ const ChatInterface = () => {
             animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
             transition={{ type: "tween", ease: "easeOut", duration: 0.45 }}
             className={cn(
-              "flex gap-4",
+              "flex gap-3 sm:gap-4",
               message.role === "user" ? "flex-row-reverse" : ""
             )}
           >
             <div
               className={cn(
-                "flex h-8 w-8 shrink-0 items-center justify-center rounded-2xl border text-xs",
+                "flex h-8 w-8 shrink-0 items-center justify-center rounded-2xl border",
                 message.role === "user"
-                  ? "bg-highlight/20 border-highlight/30 text-foreground"
+                  ? "bg-secondary/20 border-secondary/30 text-foreground"
                   : "bg-white border-brand/10 text-foreground"
               )}
             >
@@ -266,9 +263,9 @@ const ChatInterface = () => {
 
             <div
               className={cn(
-                "max-w-[78%] rounded-3xl px-5 py-3.5 border relative bg-white",
+                "max-w-[90%] sm:max-w-[82%] md:max-w-[78%] rounded-3xl px-4 sm:px-5 py-3.5 border relative bg-white",
                 message.role === "user"
-                  ? "bg-highlight/10 text-foreground border-highlight/20 rounded-tr-sm"
+                  ? "bg-secondary/10 text-foreground border-secondary/20 rounded-tr-sm"
                   : "bg-white text-foreground border-brand/10 rounded-tl-sm soft-shadow-sm"
               )}
             >
@@ -276,20 +273,18 @@ const ChatInterface = () => {
                 <div className="absolute -left-[1px] top-0 bottom-0 w-[2px] bg-gradient-to-b from-brand to-transparent rounded-l" />
               )}
 
-              {/* NEW MARKDOWN RENDERER */}
               {message.role === "user" ? (
-                <p className="text-xs md:text-sm whitespace-pre-wrap leading-relaxed font-sans">
+                <p className="text-sm sm:text-base whitespace-pre-wrap leading-relaxed font-sans">
                   {message.content}
                 </p>
               ) : message.content === "" ? (
-                /* ⏳ Show bouncing dots while waiting for the first word from OpenRouter */
                 <div className="flex items-center gap-1.5 py-2 px-1">
                   <div className="w-1.5 h-1.5 rounded-full bg-brand/60 animate-pulse" style={{ animationDelay: "0ms" }} />
                   <div className="w-1.5 h-1.5 rounded-full bg-brand/60 animate-pulse" style={{ animationDelay: "150ms" }} />
                   <div className="w-1.5 h-1.5 rounded-full bg-brand/60 animate-pulse" style={{ animationDelay: "300ms" }} />
                 </div>
               ) : (
-                  <div className="text-xs md:text-sm leading-relaxed font-sans space-y-3">
+                  <div className="text-sm sm:text-base leading-relaxed font-sans space-y-3">
                     <ReactMarkdown
                       components={{
                         p: ({ node, ...props }) => <p className="whitespace-pre-wrap" {...props} />,
@@ -313,7 +308,7 @@ const ChatInterface = () => {
 
               <p
                 className={cn(
-                  "text-[9px] mt-2 font-mono tracking-wide text-muted-foreground",
+                  "text-[10px] mt-2 font-mono tracking-wide text-muted-foreground",
                   message.role === "user" ? "text-right" : "text-left"
                 )}
               >
@@ -327,7 +322,7 @@ const ChatInterface = () => {
         ))}
 
         {isTyping && (
-          <div className="flex gap-4">
+          <div className="flex gap-3 sm:gap-4">
             <div className="flex h-8 w-8 items-center justify-center rounded-2xl bg-white border border-brand/10 soft-shadow-sm">
               <Bot className="h-4 w-4 text-brand" />
             </div>
@@ -344,19 +339,18 @@ const ChatInterface = () => {
         <div ref={messagesEndRef} />
       </div>
 
-      {/* Suggested Prompt Shortcuts */}
       {messages.length === 1 && (
-        <div className="px-6 pb-4 pt-2">
-          <p className="text-[10px] text-muted-foreground mb-3 flex items-center gap-1.5 font-mono">
+        <div className="px-4 sm:px-6 pb-4 pt-2">
+          <p className="text-xs text-muted-foreground mb-3 flex items-center gap-1.5 font-mono">
             <Sparkles className="h-3.5 w-3.5 text-brand" />
             [QUICK_QUERY_PROMPTS]
           </p>
-          <div className="flex flex-wrap gap-2.5">
+          <div className="flex flex-wrap gap-2">
             {suggestedQuestions.map((question, index) => (
               <button
                 key={index}
                 onClick={() => handleSendMessage(question)}
-                className="text-[10px] px-3 py-2 rounded-2xl bg-muted/60 border border-brand/10 text-foreground hover:soft-shadow-sm hover:bg-muted/70 transition-all duration-300 font-sans text-left"
+                className="text-xs px-3 py-2.5 rounded-2xl bg-muted/60 border border-brand/10 text-foreground hover:soft-shadow-sm hover:bg-muted/70 transition-all duration-300 font-sans text-left min-h-[44px]"
               >
                 {question}
               </button>
@@ -365,9 +359,8 @@ const ChatInterface = () => {
         </div>
       )}
 
-      {/* Frosted Input Console */}
-      <div className="p-6 border-t border-brand/8 bg-white">
-        <div className="flex items-end gap-4">
+      <div className="p-4 sm:p-6 border-t border-brand/10 bg-white">
+        <div className="flex items-end gap-3 sm:gap-4">
           <div className="flex-1 relative">
             <textarea
               ref={inputRef}
@@ -376,7 +369,7 @@ const ChatInterface = () => {
               onKeyDown={handleKeyDown}
               placeholder="Query deep diagnostic patterns..."
               rows={1}
-              className="w-full resize-none rounded-3xl border border-brand/10 bg-white px-4 py-3.5 text-xs md:text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-brand focus:border-brand transition-all duration-300"
+              className="w-full resize-none rounded-3xl border border-brand/10 bg-white px-4 py-3.5 text-sm sm:text-base text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-brand focus:border-brand transition-all duration-300"
               style={{ minHeight: "48px", maxHeight: "120px" }}
             />
           </div>
@@ -394,7 +387,7 @@ const ChatInterface = () => {
             )}
           </Button>
         </div>
-        <p className="text-[9px] text-muted-foreground mt-3 text-center font-sans">
+        <p className="text-[10px] sm:text-xs text-muted-foreground mt-3 text-center font-sans">
           <strong>[DISCLAIMER]</strong> AI assistant summaries are strictly educational. Direct all clinical triages to specialized oncological staff.
         </p>
       </div>

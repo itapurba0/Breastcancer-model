@@ -25,8 +25,7 @@ module.exports = {
             },
             fontFamily: {
                 sans: ["Inter", "ui-sans-serif", "system-ui"],
-                heading: ["Plus Jakarta Sans", "Outfit", "ui-sans-serif", "system-ui"],
-                serif: ["Lora", "ui-serif", "Georgia"],
+                heading: ["Plus Jakarta Sans", "ui-sans-serif", "system-ui"],
                 mono: ["Inconsolata", "ui-monospace", "SFMono-Regular"],
             },
             colors: {
@@ -63,40 +62,15 @@ module.exports = {
                     DEFAULT: "hsl(var(--card))",
                     foreground: "hsl(var(--card-foreground))",
                 },
-                medical: {
-                    teal: "hsl(var(--medical-teal))",
-                    "teal-light": "hsl(var(--medical-teal-light))",
-                    "teal-dark": "hsl(var(--medical-teal-dark))",
-                    coral: "hsl(var(--medical-coral))",
-                    "coral-light": "hsl(var(--medical-coral-light))",
-                },
                 brand: {
-                    DEFAULT: "#78909C",
+                    DEFAULT: "hsl(var(--brand))",
                     contrast: "#333333",
                 },
                 highlight: {
-                    DEFAULT: "#FFE082",
+                    DEFAULT: "hsl(var(--highlight))",
                 },
                 sage: {
-                    DEFAULT: "#E0F2F1",
-                },
-                success: {
-                    DEFAULT: "hsl(var(--success))",
-                    light: "hsl(var(--success-light))",
-                },
-                warning: {
-                    DEFAULT: "hsl(var(--warning))",
-                    light: "hsl(var(--warning-light))",
-                },
-                sidebar: {
-                    DEFAULT: "hsl(var(--sidebar-background))",
-                    foreground: "hsl(var(--sidebar-foreground))",
-                    primary: "hsl(var(--sidebar-primary))",
-                    "primary-foreground": "hsl(var(--sidebar-primary-foreground))",
-                    accent: "hsl(var(--sidebar-accent))",
-                    "accent-foreground": "hsl(var(--sidebar-accent-foreground))",
-                    border: "hsl(var(--sidebar-border))",
-                    ring: "hsl(var(--sidebar-ring))",
+                    DEFAULT: "hsl(var(--sage))",
                 },
             },
             borderRadius: {

@@ -2,17 +2,13 @@
 @import "tailwindcss/components";
 @import "tailwindcss/utilities";
 
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Manrope:wght@300;400;500;600;700;800&family=Outfit:wght@300;400;500;600;700;800&display=swap');
-@import url("https://fonts.googleapis.com/css2?family=Lora:wght@400;500;600;700&display=swap");
-@import url("https://fonts.googleapis.com/css2?family=Inconsolata:wght@400;700&display=swap");
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inconsolata:wght@400;700&display=swap');
 
 @layer base {
   :root {
-    /* Pure White Canvas & Modern Clean Light Theme variables */
     --background: 0 0% 100%;
-    /* #FFFFFF */
     --foreground: 0 0% 20%;
-    /* Crisp Near-Black #333333 */
 
     --card: 0 0% 100%;
     --card-foreground: 0 0% 20%;
@@ -20,25 +16,17 @@
     --popover: 0 0% 100%;
     --popover-foreground: 0 0% 20%;
 
-    /* Refined Sophisticated Blue-Gray (brand primary) */
     --primary: 183 8% 55%;
-    /* approximates #78909C */
     --primary-foreground: 0 0% 100%;
 
-    /* Reassuring Warm Light Gold Highlight */
     --secondary: 46 100% 75%;
-    /* Warm Gold #FFE082 */
     --secondary-foreground: 0 0% 20%;
 
     --muted: 60 50% 98%;
     --muted-foreground: 0 0% 38%;
-    /* Dark gray #616161 for captions */
 
-    /* Soft Serene Sage Green */
     --accent: 173 40% 92%;
-    /* Sage #E0F2F1 */
     --accent-foreground: 173 60% 20%;
-    /* Dark sage green text for high legibility */
 
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 85% 97%;
@@ -48,12 +36,14 @@
     --ring: 200 12% 44%;
 
     --radius: 1.75rem;
-    /* Generous rounded-3xl compatible */
 
-    --font-sans: 'Inter', 'Manrope', ui-sans-serif, system-ui, -apple-system, sans-serif;
-    --font-heading: 'Plus Jakarta Sans', 'Outfit', ui-sans-serif, system-ui, -apple-system, sans-serif;
-    --font-serif: 'Lora', ui-serif, Georgia, Cambria, serif;
-    --font-mono: 'Inconsolata', ui-monospace, monospace;
+    --font-sans: 'Inter', ui-sans-serif, system-ui, -apple-system, sans-serif;
+    --font-heading: 'Plus Jakarta Sans', ui-sans-serif, system-ui, -apple-system, sans-serif;
+    --font-mono: 'Inconsolata', ui-monospace, SFMono-Regular, monospace;
+
+    --brand: 200 15% 54%;
+    --highlight: 46 100% 75%;
+    --sage: 173 40% 92%;
   }
 }
 
@@ -63,13 +53,8 @@
   }
 
   body {
-    @apply bg-background font-sans antialiased selection:bg-secondary/40 selection:text-foreground;
-    /* Accessibility-first typography */
+    @apply bg-background text-foreground font-sans antialiased selection:bg-secondary/40 selection:text-foreground;
     @apply text-base leading-relaxed;
-    color: #212121;
-    /* high-contrast primary reading color */
-    background-color: #FFFFFF;
-    font-family: var(--font-sans), sans-serif;
     overflow-x: hidden;
   }
 
@@ -82,52 +67,26 @@
   .font-heading {
     font-family: var(--font-heading), sans-serif;
     letter-spacing: -0.04em;
-    color: #455A64;
-    /* Sophisticated Blue-Gray */
+    color: hsl(var(--foreground));
   }
-}
-
-/* Accessibility fixes: make any overly-small utilities readable by default
-   - Treat Tailwind `text-xs` and a few explicit tiny classes as at least `text-sm`
-   - Reserve `.footer-small` for true microcopy (copyrights) */
-
-.text-xs,
-.text-\[10px\],
-.text-\[9px\],
-.text-\[8px\] {
-  font-size: 0.875rem;
-  /* text-sm */
-  line-height: 1.25rem;
 }
 
 .footer-small {
   font-size: 0.75rem;
-  /* true xs for tiny legal copy only */
   line-height: 1rem;
-}
-
-/* Ensure muted/caption text is readable */
-.text-muted-foreground {
-  color: #424242 !important;
-  /* near text-gray-800 for legibility */
-  font-size: 0.875rem;
-  /* text-sm */
-  line-height: 1.25rem;
 }
 
 @layer utilities {
 
-  /* Premium Light Spatial Card: Warm off-white/light beige with ultra-soft diffused shadows */
   .glass-panel {
-    background: rgba(255, 255, 255, 0.8) !important;
-    backdrop-filter: blur(20px) saturate(120%) !important;
-    -webkit-backdrop-filter: blur(20px) saturate(120%) !important;
-    border: 1px solid rgba(120, 144, 156, 0.15) !important;
+    background: rgba(255, 255, 255, 0.8);
+    backdrop-filter: blur(20px) saturate(120%);
+    -webkit-backdrop-filter: blur(20px) saturate(120%);
+    border: 1px solid hsl(var(--brand) / 0.15);
     box-shadow:
-      0 20px 50px rgba(120, 144, 156, 0.06),
-      inset 0 1px 2px rgba(255, 255, 255, 0.9) !important;
-    border-radius: 1.75rem !important;
-    /* rounded-3xl */
+      0 20px 50px hsl(var(--brand) / 0.06),
+      inset 0 1px 2px rgb(255 255 255 / 0.9);
+    border-radius: 1.75rem;
   }
 
   .glass-panel-hover {
@@ -136,34 +95,31 @@
 
   .glass-panel-hover:hover {
     transform: translateY(-4px) scale(1.01);
-    background: rgba(255, 255, 255, 0.95) !important;
-    border-color: rgba(120, 144, 156, 0.3) !important;
+    background: rgba(255, 255, 255, 0.95);
+    border-color: hsl(var(--brand) / 0.3);
     box-shadow:
-      0 30px 60px rgba(120, 144, 156, 0.12),
-      inset 0 1px 2px rgba(255, 255, 255, 1) !important;
+      0 30px 60px hsl(var(--brand) / 0.12),
+      inset 0 1px 2px rgb(255 255 255 / 1);
   }
 
-  /* Sophisticated Soft Shadow Utilities */
   .soft-shadow-sm {
-    box-shadow: 0 4px 15px rgba(120, 144, 156, 0.03);
+    box-shadow: 0 4px 15px hsl(var(--brand) / 0.03);
   }
 
   .soft-shadow-md {
-    box-shadow: 0 10px 30px rgba(120, 144, 156, 0.05);
+    box-shadow: 0 10px 30px hsl(var(--brand) / 0.05);
   }
 
   .soft-shadow-lg {
-    box-shadow: 0 20px 50px rgba(120, 144, 156, 0.08);
+    box-shadow: 0 20px 50px hsl(var(--brand) / 0.08);
   }
 
   .text-glow-teal {
     text-shadow: none;
-    /* Removed dark bioluminescent glow effects */
   }
 
   .bg-glow-teal {
-    box-shadow: 0 4px 14px rgba(120, 144, 156, 0.15);
-    /* Replaced with refined soft drop-shadow */
+    box-shadow: 0 4px 14px hsl(var(--brand) / 0.15);
   }
 
   .animate-float {
@@ -183,21 +139,96 @@
   }
 }
 
-/* Custom Scrollbar for elegant light look */
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;
 }
 
 ::-webkit-scrollbar-track {
-  background: rgba(120, 144, 156, 0.02);
+  background: hsl(var(--brand) / 0.02);
 }
 
 ::-webkit-scrollbar-thumb {
-  background: rgba(120, 144, 156, 0.2);
+  background: hsl(var(--brand) / 0.2);
   border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(120, 144, 156, 0.4);
+  background: hsl(var(--brand) / 0.4);
+}
+
+@page {
+  size: A4 portrait;
+  margin: 1.5cm;
+}
+
+@media print {
+  html, body {
+    font-size: 10pt;
+    line-height: 1.4;
+    color: #000;
+    background: #fff;
+  }
+
+  .glass-panel,
+  .glass-panel-hover {
+    background: #fff !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    box-shadow: none !important;
+    border: 1px solid #ccc !important;
+  }
+
+  .soft-shadow-sm,
+  .soft-shadow-md,
+  .soft-shadow-lg {
+    box-shadow: none !important;
+  }
+
+  .report-preview {
+    padding: 0 !important;
+    margin: 0 !important;
+    border: none !important;
+  }
+
+  .report-section {
+    margin-bottom: 0.6cm !important;
+  }
+
+  .report-grid {
+    display: grid !important;
+    gap: 0.4cm !important;
+  }
+
+  .report-image-wrap {
+    aspect-ratio: 16/9 !important;
+    max-height: 4cm !important;
+  }
+
+  .report-heading {
+    font-size: 16pt !important;
+    margin-bottom: 0.3cm !important;
+  }
+
+  .report-subheading {
+    font-size: 9pt !important;
+  }
+
+  .report-label {
+    font-size: 7pt !important;
+  }
+
+  .report-value {
+    font-size: 9pt !important;
+  }
+
+  .report-body {
+    font-size: 9pt !important;
+  }
+
+  .report-disclaimer {
+    margin-top: 0.6cm !important;
+    padding: 0.3cm !important;
+    border-width: 1.5px !important;
+  }
 }

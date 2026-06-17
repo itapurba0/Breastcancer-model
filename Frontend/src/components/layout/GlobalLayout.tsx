@@ -17,16 +17,15 @@ const GlobalLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => 
             {location.pathname === "/" && <ParticleCanvas />}
             <div style={{ position: "relative", zIndex: 10 }}>
                 <AnimatePresence mode="wait">
-                    <motion.main
-                        key={location.pathname || "app"}
-                        initial="initial"
-                        animate="animate"
-                        exit="exit"
-                        variants={pageTransition}
-                        className="container mx-auto px-4 py-8"
-                    >
-                        {children}
-                    </motion.main>
+                <motion.main
+                    key={location.pathname || "app"}
+                    initial="initial"
+                    animate="animate"
+                    exit="exit"
+                    variants={pageTransition}
+                >
+                    {children}
+                </motion.main>
                 </AnimatePresence>
             </div>
         </div>

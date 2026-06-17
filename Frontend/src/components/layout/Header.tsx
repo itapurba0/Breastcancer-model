@@ -30,8 +30,7 @@ const Header = () => {
           </span>
         </Link>
 
-        {/* Navigation Items */}
-        <nav className="flex items-center gap-2 relative z-10">
+        <nav className="flex items-center gap-1 sm:gap-2 relative z-10">
           {navItems.map((item) => {
             const Icon = item.icon;
             const isActive = location.pathname === item.path;
@@ -40,14 +39,14 @@ const Header = () => {
                 key={item.path}
                 to={item.path}
                 className={cn(
-                  "flex items-center gap-2 px-4 py-2 rounded-3xl text-xs font-semibold tracking-wide transition-transform duration-300",
+                  "flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2.5 min-h-[44px] rounded-3xl text-xs font-semibold tracking-wide transition-transform duration-300",
                   isActive
-                    ? "bg-highlight/40 text-foreground border border-highlight/60 soft-shadow-sm"
+                    ? "bg-secondary/40 text-foreground border border-secondary/60 soft-shadow-sm"
                     : "text-muted-foreground hover:text-foreground hover:bg-brand/5"
                 )}
               >
                 <Icon className={cn("h-4 w-4", isActive ? "text-foreground" : "text-muted-foreground")} />
-                <span className="hidden sm:inline">{item.label}</span>
+                <span className="text-[10px] sm:text-xs">{item.label}</span>
               </Link>
             );
           })}
