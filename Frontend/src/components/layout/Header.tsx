@@ -10,11 +10,14 @@ const Header = () => {
   const navItems = [
     { path: "/", label: "Home", icon: Activity },
     { path: "/classification", label: "Diagnostic Scan", icon: Microscope },
-    { path: "/chatbot", label: "Neural Chat", icon: MessageCircle },
+    { path: "/chatbot", label: "Medical Chat", icon: MessageCircle },
   ];
 
   return (
     <header className="sticky top-6 z-50 w-full max-w-5xl mx-auto px-6">
+      <a href="#main-content" className="sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-[100] focus:bg-primary focus:text-primary-foreground focus:px-4 focus:py-2 focus:rounded-2xl">
+        Skip to content
+      </a>
       <div className="glass-panel px-6 py-3.5 flex items-center justify-between soft-shadow-sm relative overflow-hidden">
         <div className="absolute -left-8 top-1/2 -translate-y-1/2 w-32 h-8 bg-highlight/10 rounded-full blur-xl pointer-events-none" />
 
@@ -24,9 +27,6 @@ const Header = () => {
           </div>
           <span className="text-base font-bold text-foreground font-heading tracking-tight">
             Classifier<span className="text-brand">AI</span>
-          </span>
-          <span className="text-[9px] uppercase tracking-widest font-mono text-brand border border-brand/20 px-2 py-0.5 rounded-lg ml-2 bg-white/60 hidden sm:inline-block font-bold">
-            Clinical Hub
           </span>
         </Link>
 
@@ -41,7 +41,7 @@ const Header = () => {
                 className={cn(
                   "flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2.5 min-h-[44px] rounded-3xl text-xs font-semibold tracking-wide transition-transform duration-300",
                   isActive
-                    ? "bg-secondary/40 text-foreground border border-secondary/60 soft-shadow-sm"
+                    ? "bg-primary/10 text-foreground border border-primary/20 soft-shadow-sm"
                     : "text-muted-foreground hover:text-foreground hover:bg-brand/5"
                 )}
               >
@@ -58,6 +58,7 @@ const Header = () => {
               </span>
               <button
                 onClick={logout}
+                aria-label="Logout"
                 className="flex items-center gap-1.5 px-3 py-2.5 min-h-[44px] rounded-3xl text-xs font-semibold text-muted-foreground hover:text-foreground hover:bg-brand/5 transition-colors duration-300"
               >
                 <LogOut className="h-4 w-4" />
@@ -67,10 +68,11 @@ const Header = () => {
           ) : (
             <Link
               to="/login"
+              aria-label="Login"
               className={cn(
                 "flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2.5 min-h-[44px] rounded-3xl text-xs font-semibold tracking-wide transition-colors duration-300 ml-1 sm:ml-2",
                 location.pathname === "/login"
-                  ? "bg-secondary/40 text-foreground border border-secondary/60 soft-shadow-sm"
+                  ? "bg-primary/10 text-foreground border border-primary/20 soft-shadow-sm"
                   : "text-muted-foreground hover:text-foreground hover:bg-brand/5"
               )}
             >
@@ -82,7 +84,7 @@ const Header = () => {
 
         <div className="hidden md:flex items-center gap-2 text-xs font-mono text-muted-foreground relative z-10 font-bold">
           <span className="w-2.5 h-2.5 rounded-full bg-sage animate-pulse" />
-          <span>TRIAGE_NODE_ACTIVE</span>
+          <span>System ready</span>
         </div>
       </div>
     </header>
