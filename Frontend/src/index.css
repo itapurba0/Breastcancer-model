@@ -96,7 +96,10 @@
   }
 
   .glass-panel-hover {
-    transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    transition: transform 0.4s cubic-bezier(0.25, 1, 0.5, 1),
+                background 0.4s cubic-bezier(0.25, 1, 0.5, 1),
+                border-color 0.4s cubic-bezier(0.25, 1, 0.5, 1),
+                box-shadow 0.4s cubic-bezier(0.25, 1, 0.5, 1);
   }
 
   .glass-panel-hover:hover {
@@ -123,6 +126,14 @@
   .bg-glow-teal {
     box-shadow: 0 4px 14px hsl(var(--brand) / 0.15);
   }
+
+  .scrollbar-hidden {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+  .scrollbar-hidden::-webkit-scrollbar {
+    display: none;
+  }
 }
 
 ::-webkit-scrollbar {
@@ -141,6 +152,28 @@
 
 ::-webkit-scrollbar-thumb:hover {
   background: hsl(var(--primary) / 0.4);
+}
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Tabular numbers for data values */
+.tabular-nums {
+  font-variant-numeric: tabular-nums;
+}
+
+/* Balanced headings */
+.text-balance {
+  text-wrap: balance;
 }
 
 @page {
@@ -208,14 +241,8 @@
 
   /* Report images */
   .report-image-wrap {
-    aspect-ratio: auto !important;
-    height: 3.5cm !important;
-    max-height: 3.5cm !important;
+    max-height: 5.5cm !important;
     padding: 0.2cm !important;
-  }
-
-  .report-image-wrap img {
-    max-height: 3.1cm !important;
   }
 
   /* Report typography */
