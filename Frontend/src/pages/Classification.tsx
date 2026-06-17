@@ -2,7 +2,6 @@ import { motion } from "framer-motion";
 import Header from "@/components/layout/Header";
 import ImageUploader from "@/components/classification/ImageUploader";
 import HeroCanvas from "@/components/layout/HeroCanvas";
-import { ShieldCheck, Sparkles, Network } from "lucide-react";
 
 const pageVariants = {
   hidden: { opacity: 0, filter: "blur(10px)" },
@@ -18,19 +17,6 @@ const pageVariants = {
 };
 
 const Classification = () => {
-  const benefits = [
-    { icon: ShieldCheck, text: "HIPAA_ENCRYPTED_TRANSFER" },
-    { icon: Sparkles, text: "AI_EXPLAINABLE_GRAD_CAM" },
-    { icon: Network, text: "TRIAGE_CLINICAL_ADVICE" },
-  ];
-
-  function humanize(token: string) {
-    return token
-      .replace(/_/g, " ")
-      .toLowerCase()
-      .replace(/\b\w/g, (c) => c.toUpperCase());
-  }
-
   return (
     <div className="min-h-screen bg-transparent text-foreground relative selection:bg-secondary/40 selection:text-foreground">
 

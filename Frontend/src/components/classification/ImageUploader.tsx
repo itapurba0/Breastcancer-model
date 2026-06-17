@@ -5,6 +5,9 @@ import {
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
 
 interface ClassificationResult {
@@ -165,10 +168,10 @@ const ImageUploader = () => {
             </div>
             <div className="text-center space-y-2">
               <h2 className="text-lg sm:text-xl font-bold text-foreground font-heading tracking-tight">
-                MAMMOGRAPHY_IMAGE_DROP_ZONE
+                Upload mammography image
               </h2>
               <p className="text-sm sm:text-base text-muted-foreground font-sans max-w-sm font-semibold">
-                Drag & drop digital DICOM/ultrasound vectors here, or browse local systems.
+                Drag and drop or click to browse
               </p>
             </div>
             <input
@@ -179,7 +182,7 @@ const ImageUploader = () => {
             />
             <div className="flex items-center gap-2 px-4 py-1.5 rounded-full bg-muted border border-brand/15 text-[10px] sm:text-xs text-muted-foreground font-mono font-bold">
               <ImageIcon className="h-3.5 w-3.5 text-brand" />
-              <span>SUPPORTED_VECTORS: JPG, PNG, DCM</span>
+              <span>Supports: JPEG, PNG</span>
             </div>
           </div>
         ) : (
@@ -219,9 +222,9 @@ const ImageUploader = () => {
                 className="h-12 w-full sm:w-auto px-6 bg-secondary hover:bg-secondary/95 border border-secondary/40 text-foreground transition-transform duration-300 font-sans font-semibold rounded-3xl flex items-center gap-2 soft-shadow-sm"
               >
                 {isAnalyzing ? (
-                  <><Loader2 className="h-4 w-4 animate-spin" /> Executing Deep Inference...</>
+                  <><Loader2 className="h-4 w-4 animate-spin" /> Analyzing...</>
                 ) : (
-                  <><Microscope className="h-4 w-4" /> Initialize Deep Inference</>
+                  <><Microscope className="h-4 w-4" /> Analyze Image</>
                 )}
               </Button>
             </div>
@@ -250,8 +253,8 @@ const ImageUploader = () => {
               </div>
               <div className="flex-1">
                 <div className="flex justify-between items-center mb-1">
-                  <p className="font-bold text-foreground font-heading text-sm">COGNITIVE_SCANNER_CALC</p>
-                  <span className="text-xs font-bold text-foreground bg-secondary/30 border border-secondary/60 px-3 py-0.5 rounded-full animate-pulse uppercase tracking-wider font-mono">Calculating</span>
+                  <p className="font-bold text-foreground font-heading text-sm">Image analysis</p>
+                  <span className="text-xs font-bold text-foreground bg-secondary/30 border border-secondary/60 px-3 py-0.5 rounded-full animate-pulse uppercase tracking-wider font-mono">Analyzing</span>
                 </div>
                 <p className="text-sm text-muted-foreground font-sans leading-relaxed font-semibold">
                   Mapping visual tissue saliencies & processing deep layers...
@@ -261,6 +264,11 @@ const ImageUploader = () => {
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* Skeleton placeholder during analysis */}
+      {isAnalyzing && !result && (
+        <div className="animate-pulse bg-muted rounded-2xl h-64 w-full" />
+      )}
 
       {/* 3. Main Result Panel & Report Generator */}
       <AnimatePresence>
@@ -288,6 +296,13 @@ const ImageUploader = () => {
                     accentColor = "text-accent-foreground border-sage/80 bg-sage/80";
                   }
 
+                  let badgeClass = "bg-secondary text-secondary-foreground";
+                  if (isNormal) {
+                    badgeClass = "bg-muted text-muted-foreground";
+                  } else if (isBenign) {
+                    badgeClass = "bg-accent text-accent-foreground";
+                  }
+
                   return (
                     <>
                       <div className={cn("flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl border", accentColor)}>
@@ -295,14 +310,17 @@ const ImageUploader = () => {
                       </div>
                       <div className="flex-1 space-y-4">
                         <div className="flex flex-wrap items-center gap-3">
-                          <span className="text-xs font-mono text-muted-foreground uppercase tracking-widest font-bold">[ DIAGNOSTIC_PREDICTION ]</span>
-                          <h3 className="text-2xl md:text-3xl font-black text-foreground font-heading tracking-tight w-full md:w-auto leading-none">
-                            {result.prediction.toUpperCase()}
-                          </h3>
+                          <span className="text-xs font-mono text-muted-foreground uppercase tracking-widest font-bold">Diagnostic prediction</span>
+                          <Badge className={cn("text-sm font-bold", badgeClass)}>
+                            {result.prediction}
+                          </Badge>
                           {!isFailed && (
-                            <span className="px-3.5 py-1 rounded-full text-xs font-mono font-bold tracking-tight border border-secondary bg-secondary/30 text-foreground">
-                              {result.confidence}% CONFIDENCE_SCORE
-                            </span>
+                            <div className="w-full max-w-xs space-y-1">
+                              <span className="text-xs font-mono text-muted-foreground font-bold">{result.confidence}% confidence</span>
+                              <div className="h-2 rounded-full bg-muted overflow-hidden">
+                                <div className="h-full bg-primary rounded-full transition-all" style={{ width: `${result.confidence}%` }} />
+                              </div>
+                            </div>
                           )}
                         </div>
                       </div>
@@ -317,7 +335,7 @@ const ImageUploader = () => {
                     <div className="w-full max-w-xl glass-panel rounded-3xl p-4 sm:p-6 border border-brand/15 shadow-sm bg-muted/30 flex flex-col gap-4">
                       <span className="text-xs font-mono text-muted-foreground uppercase tracking-widest flex items-center justify-center gap-2 font-bold">
                         <Sparkles className="h-4 w-4 text-brand animate-pulse" />
-                        EXPLAINABLE_GRAD_CAM_MAP
+                        Explainable Grad-CAM map
                       </span>
                       <div className="overflow-hidden rounded-2xl bg-muted/50 flex items-center justify-center h-64 sm:h-80 border border-brand/10 relative shadow-inner">
                         {result.gradcam ? (
@@ -332,7 +350,7 @@ const ImageUploader = () => {
                           </div>
                         )}
                         <div className="absolute bottom-3 left-3 px-3 py-1 rounded-full bg-white/90 backdrop-blur-sm text-[10px] font-mono text-foreground border border-brand/20 font-bold shadow-sm">
-                          HEATMAP_SALIENCY_VIEW
+                          Heatmap saliency view
                         </div>
                       </div>
                     </div>
@@ -341,7 +359,7 @@ const ImageUploader = () => {
                   {result.triage && (
                     <div className="p-5 sm:p-8 rounded-[2rem] bg-muted/30 border border-brand/10 space-y-4">
                       <div className="flex items-center justify-between border-b border-brand/10 pb-3">
-                        <span className="text-xs font-mono text-muted-foreground uppercase tracking-widest font-bold">[ RISK_TRIAGE_INDEX ]</span>
+                        <span className="text-xs font-mono text-muted-foreground uppercase tracking-widest font-bold">Risk triage index</span>
                         <span className={cn(
                           "px-3 py-1 rounded-full text-xs font-mono font-bold uppercase tracking-wider",
                           result.triage.tier === "high concern"
@@ -393,13 +411,25 @@ const ImageUploader = () => {
                   >
                     <div className="flex items-center gap-2 mb-4 border-b border-brand/10 pb-3">
                       <User className="h-4 w-4 text-brand" />
-                      <h4 className="font-bold font-mono text-xs text-foreground">PATIENT DEMOGRAPHICS</h4>
+                      <h4 className="font-bold font-mono text-xs text-foreground">Patient demographics</h4>
                     </div>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                      <input type="text" name="patientName" placeholder="Full Name" value={patientData.patientName} onChange={handlePatientDataChange} className="w-full rounded-xl border border-brand/15 px-4 py-2.5 min-h-[44px] text-sm focus:ring-1 focus:ring-brand outline-none" />
-                      <input type="text" name="patientAge" placeholder="Age / DOB" value={patientData.patientAge} onChange={handlePatientDataChange} className="w-full rounded-xl border border-brand/15 px-4 py-2.5 min-h-[44px] text-sm focus:ring-1 focus:ring-brand outline-none" />
-                      <input type="text" name="patientId" placeholder="Patient ID / Ref Number" value={patientData.patientId} onChange={handlePatientDataChange} className="w-full rounded-xl border border-brand/15 px-4 py-2.5 min-h-[44px] text-sm focus:ring-1 focus:ring-brand outline-none" />
-                      <input type="text" name="clinicalNotes" placeholder="Initial Clinical Notes (Optional)" value={patientData.clinicalNotes} onChange={handlePatientDataChange} className="w-full rounded-xl border border-brand/15 px-4 py-2.5 min-h-[44px] text-sm focus:ring-1 focus:ring-brand outline-none" />
+                      <div className="space-y-1.5">
+                        <Label htmlFor="patientName">Full Name</Label>
+                        <Input type="text" id="patientName" name="patientName" placeholder="Full Name" value={patientData.patientName} onChange={handlePatientDataChange} />
+                      </div>
+                      <div className="space-y-1.5">
+                        <Label htmlFor="patientAge">Age / DOB</Label>
+                        <Input type="text" id="patientAge" name="patientAge" placeholder="Age / DOB" value={patientData.patientAge} onChange={handlePatientDataChange} />
+                      </div>
+                      <div className="space-y-1.5">
+                        <Label htmlFor="patientId">Patient ID / Ref Number</Label>
+                        <Input type="text" id="patientId" name="patientId" placeholder="Patient ID / Ref Number" value={patientData.patientId} onChange={handlePatientDataChange} />
+                      </div>
+                      <div className="space-y-1.5">
+                        <Label htmlFor="clinicalNotes">Clinical Notes (Optional)</Label>
+                        <Input type="text" id="clinicalNotes" name="clinicalNotes" placeholder="Initial Clinical Notes (Optional)" value={patientData.clinicalNotes} onChange={handlePatientDataChange} />
+                      </div>
                     </div>
                     <div className="flex justify-end gap-3 pt-4">
                       <Button variant="outline" onClick={() => setReportStep("hidden")} className="rounded-full text-xs font-mono">CANCEL</Button>
@@ -421,7 +451,7 @@ const ImageUploader = () => {
                   className="report-preview bg-white rounded-none md:rounded-2xl border-t-4 border-t-foreground shadow-sm border border-brand/10 p-6 sm:p-8 md:p-12 print:p-0 print:border-none print:shadow-none font-sans"
                 >
                   <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8 pb-4 border-b border-dashed border-brand/20 print:hidden">
-                    <span className="text-xs font-mono font-bold text-muted-foreground">DOCUMENT_PREVIEW_MODE</span>
+                    <span className="text-xs font-mono font-bold text-muted-foreground">Document preview</span>
                     <div className="flex gap-3">
                       <Button variant="outline" size="sm" onClick={() => setReportStep("form")} className="rounded-full">Edit Details</Button>
                       <Button size="sm" onClick={() => window.print()} className="rounded-full bg-foreground hover:bg-foreground/90 flex gap-2">
@@ -463,13 +493,13 @@ const ImageUploader = () => {
 
                   <div className="report-grid grid grid-cols-1 md:grid-cols-2 print:grid-cols-2 gap-6 mb-8 break-inside-avoid report-section">
                     <div className="space-y-2">
-                      <p className="report-label text-xs font-bold text-muted-foreground font-mono border-b border-brand/10 pb-2">ORIGINAL SCAN VECTOR</p>
+                      <p className="report-label text-xs font-bold text-muted-foreground font-mono border-b border-brand/10 pb-2">Original scan</p>
                       <div className="report-image-wrap bg-black/5 rounded-xl flex items-center justify-center p-2 aspect-square border border-brand/10">
                         <img src={selectedImage!} alt="Original" className="max-h-full max-w-full object-contain rounded-lg mix-blend-multiply" />
                       </div>
                     </div>
                     <div className="space-y-2">
-                      <p className="report-label text-xs font-bold text-muted-foreground font-mono border-b border-brand/10 pb-2">GRAD-CAM ACTIVATION HEATMAP</p>
+                      <p className="report-label text-xs font-bold text-muted-foreground font-mono border-b border-brand/10 pb-2">Grad-CAM heatmap</p>
                       <div className="report-image-wrap bg-black/5 rounded-xl flex items-center justify-center p-2 aspect-square border border-brand/10">
                         {result.gradcam ? (
                           <img src={result.gradcam} alt="Heatmap" className="max-h-full max-w-full object-contain rounded-lg mix-blend-multiply" />
