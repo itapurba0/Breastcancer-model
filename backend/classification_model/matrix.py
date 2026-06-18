@@ -35,11 +35,11 @@ else:
 
 # Plot confusion matrix heatmap
 plt.figure(figsize=(6, 5))
-sns.heatmap(cm, annot=True, fmt="d", cmap="Blues", xticklabels=labels, yticklabels=labels)
+sns.heatmap(cm, annot=True, fmt="d", cmap="Greens", xticklabels=labels, yticklabels=labels)
 plt.xlabel("Predicted")
 plt.ylabel("True")
 plt.title("Confusion Matrix (rows=true, cols=pred)")
-out_cm = os.path.join(ROOT, "confusion_matrix2.png")
+out_cm = os.path.join(ROOT, "confusion_matrix3.png")
 plt.tight_layout()
 plt.savefig(out_cm, dpi=150)
 plt.close()

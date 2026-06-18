@@ -1,7 +1,6 @@
 /** @type {import('tailwindcss').Config} */
 module.exports = {
-    // Light-theme focused layout only (we're moving to a bespoke light Health-Tech theme)
-    darkMode: false,
+    // Light-theme focused layout only (we're moving to a bespoke light Health-Tech theme
     media: false,
     content: [
         "./index.html",

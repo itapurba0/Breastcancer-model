@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { motion } from "framer-motion";
 import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 import { useAuth } from "@/contexts/AuthContext";
 
 interface Source {
@@ -23,6 +24,8 @@ interface Message {
   sources?: Source[];
   status?: string;
 }
+
+const MAX_MESSAGES = 50;
 
 const suggestedQuestions = [
   "What are the early signs of breast cancer?",
@@ -108,13 +111,14 @@ const ChatInterface = () => {
       .then((r) => r.json())
       .then((data) => {
         if (data.messages && data.messages.length > 0) {
-          setMessages(
-            data.messages.map((m: Record<string, unknown>) => ({
+          const loadedMessages = data.messages
+            .slice(-MAX_MESSAGES)
+            .map((m: Record<string, unknown>) => ({
               ...m,
               id: m.id || Date.now().toString() + Math.random(),
               timestamp: new Date(m.timestamp || Date.now()),
-            }))
-          );
+            }));
+          setMessages(loadedMessages);
         }
       })
       .catch(() => {})
@@ -157,7 +161,7 @@ const ChatInterface = () => {
     };
 
     setMessages((prev) => {
-      const updated = [...prev, userMessage];
+      const updated = [...prev, userMessage].slice(-MAX_MESSAGES);
       saveMessages(updated);
       return updated;
     });
@@ -196,7 +200,7 @@ const ChatInterface = () => {
             sources: [] as Source[],
             status: "success" as const,
           },
-        ];
+        ].slice(-MAX_MESSAGES);
         return updated;
       });
 
@@ -220,15 +224,16 @@ const ChatInterface = () => {
               msg.id === assistantMessageId
                 ? { ...msg, content: streamedText }
                 : msg
-            );
+            ).slice(-MAX_MESSAGES);
             return updated;
           });
         }
       }
 
       setMessages((prev) => {
-        saveMessages(prev);
-        return prev;
+        const limited = prev.slice(-MAX_MESSAGES);
+        saveMessages(limited);
+        return limited;
       });
     } catch (error) {
       console.error("Chat error:", error);
@@ -242,7 +247,7 @@ const ChatInterface = () => {
         status: "error",
       };
 
-      setMessages((prev) => [...prev, errorMessage]);
+      setMessages((prev) => [...prev, errorMessage].slice(-MAX_MESSAGES));
       setIsTyping(false);
     }
   };
@@ -342,22 +347,33 @@ const ChatInterface = () => {
                   <div className="w-1.5 h-1.5 rounded-full bg-primary/60 animate-pulse" style={{ animationDelay: "300ms" }} />
                 </div>
               ) : (
-                  <div className="text-sm sm:text-base leading-relaxed font-sans space-y-3">
-                    <ReactMarkdown
-                      components={{
-                        p: ({ node, ...props }) => <p className="whitespace-pre-wrap" {...props} />,
-                        ul: ({ node, ...props }) => <ul className="list-disc pl-5 space-y-1" {...props} />,
-                        ol: ({ node, ...props }) => <ol className="list-decimal pl-5 space-y-1" {...props} />,
-                        li: ({ node, ...props }) => <li className="pl-1 marker:text-primary/70" {...props} />,
-                        strong: ({ node, ...props }) => <strong className="font-semibold text-foreground" {...props} />,
-                        h1: ({ node, ...props }) => <h1 className="text-lg font-bold mb-2 mt-4" {...props} />,
-                        h2: ({ node, ...props }) => <h2 className="text-base font-bold mb-2 mt-4" {...props} />,
-                        h3: ({ node, ...props }) => <h3 className="text-sm font-bold mb-2 mt-3" {...props} />,
-                      }}
-                    >
-                      {message.content}
-                    </ReactMarkdown>
-                  </div>
+                    <div className="text-sm sm:text-base leading-relaxed font-sans space-y-3">
+                      <ReactMarkdown
+                        remarkPlugins={[remarkGfm]}
+                        components={{
+                          p: ({ node, ...props }) => <p className="whitespace-pre-wrap" {...props} />,
+                          ul: ({ node, ...props }) => <ul className="list-disc pl-5 space-y-1" {...props} />,
+                          ol: ({ node, ...props }) => <ol className="list-decimal pl-5 space-y-1" {...props} />,
+                          li: ({ node, ...props }) => <li className="pl-1 marker:text-primary/70" {...props} />,
+                          strong: ({ node, ...props }) => <strong className="font-semibold text-foreground" {...props} />,
+                          h1: ({ node, ...props }) => <h1 className="text-lg font-bold mb-2 mt-4" {...props} />,
+                          h2: ({ node, ...props }) => <h2 className="text-base font-bold mb-2 mt-4" {...props} />,
+                          h3: ({ node, ...props }) => <h3 className="text-sm font-bold mb-2 mt-3" {...props} />,
+                          table: ({ children, ...props }) => (
+                            <div className="bg-muted/50 p-4 rounded-lg border border-primary/10 overflow-x-auto font-mono text-xs" {...props}>
+                              {children}
+                            </div>
+                          ),
+                          thead: ({ children, ...props }) => <div className="font-bold border-b border-primary/20 pb-2 mb-2" {...props}>{children}</div>,
+                          tbody: ({ children, ...props }) => <div {...props}>{children}</div>,
+                          tr: ({ children, ...props }) => <div className="flex gap-4 py-1" {...props}>{children}</div>,
+                          th: ({ children, ...props }) => <span className="font-semibold w-1/2" {...props}>{children}</span>,
+                          td: ({ children, ...props }) => <span className="w-1/2" {...props}>{children}</span>,
+                        }}
+                      >
+                        {message.content}
+                      </ReactMarkdown>
+                    </div>
               )}
 
               {message.role === "assistant" && message.sources && (

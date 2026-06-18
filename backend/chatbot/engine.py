@@ -293,11 +293,7 @@ from fastembed import TextEmbedding
 import ollama
 from openai import AsyncOpenAI
 
-try:
-    from dotenv import load_dotenv
-except ImportError:
-    def load_dotenv() -> None:
-        return None
+from dotenv import load_dotenv
 
 # Load Environment Variables
 load_dotenv()
@@ -350,7 +346,7 @@ def retrieve_context(user_question: str, top_k: int = 1):
         for hit in search_response.points:
             if hit.payload and "text" in hit.payload:
                 context_chunks.append(hit.payload["text"][:1200])
-
+        print(f"🔍 Retrieved {len(context_chunks)} chunks from Qdrant.")
         return "\n\n---\n\n".join(context_chunks)
     except Exception as e:
         print(f"\n❌ Retrieval Error: {e}")
@@ -381,20 +377,29 @@ async def generate_rag_response(messages):
     print(f"\n[1/2] Retrieving context for: '{latest_user_question}'...")
    
     context = retrieve_context(latest_user_question)
-
+    print(f"\n[Context Retrieved]:\n{context}\n")
     if not context.strip():
         yield "I'm sorry, but I don't have enough information in my current medical files to answer that safely."
         return
 
     system_prompt = f"""
-    You are a compassionate and accurate medical AI assistant.
-    Your job is to explain medical information in simple, clear, beginner-friendly language.
+    You are a warm, empathetic, and supportive Breast Cancer Patient Navigator. 
+    Your goal is strictly to spread awareness and help people understand breast cancer based ONLY on the provided documents.
     
-    STRICT RULES:
-    1. ONLY use the provided medical context.
-    2. Do NOT invent medical facts.
-    3. Do NOT reveal internal reasoning.
-    4. FORMATTING: You MUST use Markdown formatting. Use bullet points for lists, **bold text** for key terms, and line breaks to separate ideas.
+    STRICT SCOPE GUARDRAILS:
+    1. SCOPE: You are a BREAST CANCER companion ONLY. 
+    2. OUT-OF-SCOPE RULE: If the user asks about any other type of cancer (e.g., brain cancer, lung cancer, leukemia) or any non-breast-cancer topic, you MUST politely decline to answer. 
+    3. State clearly that you are specialized exclusively in breast cancer awareness and support, and gently guide them back to asking about breast diagnosis, screening, or treatments.
+    
+    STRICT TONE & PERSONA RULES:
+    1. DO NOT sound like a doctor, oncologist, or medical student. 
+    2. Speak to the user as if you are a supportive guide walking them through an awareness brochure.
+    3. Use extremely simple, beginner-friendly language (8th-grade reading level).
+    4. ONLY use the provided medical context. Do not pull in outside medical knowledge.
+    
+    FORMATTING: 
+    - Use Markdown formatting (bullet points, bold text).
+    - Keep your paragraphs short so they are easy to read on a screen.
     
     MEDICAL CONTEXT:
     {context}
@@ -410,7 +415,7 @@ async def generate_rag_response(messages):
         stream = await ai_client.chat.completions.create(
             model="openai/gpt-oss-120b:free", # 1. Force a specific model instead of openrouter/free
             messages=ai_memory,
-            temperature=0.0, # 2. NEW: Drops randomness to absolute zero
+            temperature=0.3, # 2. NEW: Drops randomness to absolute zero
             stream=True
         )
 
@@ -418,7 +423,7 @@ async def generate_rag_response(messages):
         async for chunk in stream:
             content = chunk.choices[0].delta.content
             if content:
-                print(content, end="", flush=True)
+                # print(content, end="", flush=True)
                 yield content
             
         print("\n")
