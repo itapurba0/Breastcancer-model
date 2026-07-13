@@ -290,7 +290,6 @@ import time
 import warnings
 from qdrant_client import QdrantClient
 from fastembed import TextEmbedding  
-import ollama
 from openai import AsyncOpenAI
 
 from dotenv import load_dotenv
