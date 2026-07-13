@@ -23,3 +23,10 @@ qdrant-client
 dotenv
 pymongo
 pyjwt
+requests
+bcrypt
+sentence-transformers
+pandas
+tqdm
+seaborn
+albumentations

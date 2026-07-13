@@ -3,6 +3,7 @@ import json
 import math
 from typing import Dict, List, Optional
 
+import requests
 from pydantic import BaseModel
 
 BASE_DIR = os.path.dirname(__file__)
@@ -162,44 +163,55 @@ def recommend_facilities(body: FacilityRecommendRequest) -> dict:
 
 
 async def search_facilities(body: FacilitySearchRequest) -> dict:
-    """Search for facilities using Google Places API (fallback)."""
+    """Search for facilities using the Google Places API (New)."""
     api_key = os.environ.get("GOOGLE_PLACES_API_KEY", "")
     if not api_key:
         return {"recommendations": [], "source": "unavailable", "error": "Google Places API key not configured"}
 
     try:
-        import requests as req
-
-        params = {
-            "query": body.query,
-            "key": api_key,
-            "type": "hospital",
+        headers = {
+            "X-Goog-Api-Key": api_key,
+            "X-Goog-FieldMask": "places.id,places.displayName,places.formattedAddress,places.rating,places.userRatingCount,places.regularOpeningHours",
+            "Content-Type": "application/json",
         }
-        if body.lat is not None and body.lng is not None:
-            params["location"] = f"{body.lat},{body.lng}"
-            params["radius"] = body.radius
 
-        resp = req.get("https://maps.googleapis.com/maps/api/place/textsearch/json", params=params, timeout=10)
+        payload = {
+            "textQuery": body.query,
+            "maxResultCount": 5,
+        }
+
+        if body.lat is not None and body.lng is not None:
+            payload["locationBias"] = {
+                "circle": {
+                    "center": {"latitude": body.lat, "longitude": body.lng},
+                    "radius": body.radius,
+                }
+            }
+
+        resp = requests.post(
+            "https://places.googleapis.com/v1/places:searchText",
+            headers=headers,
+            json=payload,
+            timeout=10,
+        )
         resp.raise_for_status()
         data = resp.json()
 
-        if data.get("status") != "OK":
-            return {"recommendations": [], "source": "google", "error": f"Google Places API error: {data.get('status')}"}
-
         results = []
-        for place in data.get("results", [])[:5]:
+        for place in data.get("places", [])[:5]:
+            name = place.get("displayName", {}).get("text", "") if isinstance(place.get("displayName"), dict) else place.get("displayName", "")
             results.append({
-                "id": place.get("place_id", ""),
-                "name": place.get("name", ""),
+                "id": place.get("id", ""),
+                "name": name,
                 "type": "hospital",
-                "address": place.get("formatted_address", ""),
+                "address": place.get("formattedAddress", ""),
                 "rating": place.get("rating"),
-                "total_ratings": place.get("user_ratings_total"),
-                "open_now": place.get("opening_hours", {}).get("open_now"),
+                "total_ratings": place.get("userRatingCount"),
+                "open_now": place.get("regularOpeningHours", {}).get("openNow") if isinstance(place.get("regularOpeningHours"), dict) else None,
                 "relevance_reason": f"Google Places result ({place.get('rating', 'N/A')} stars)",
             })
 
         return {"recommendations": results, "source": "google"}
 
-    except Exception as e:
+    except requests.RequestException as e:
         return {"recommendations": [], "source": "google", "error": f"Google Places search failed: {str(e)}"}
