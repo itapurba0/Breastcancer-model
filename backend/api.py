@@ -33,13 +33,21 @@ async def lifespan(app: FastAPI):
     else:
         print("Model loaded successfully at startup.")
     yield
-   
 
+origins = [
+    "http://localhost:3000",
+    "http://127.0.0.1:3000",
+]
+
+VERCEL_URL = os.getenv("VERCEL_URL")
+
+if VERCEL_URL:
+    origins.append(f"https://{VERCEL_URL}")
 app = FastAPI(title="Backend Classifier API", lifespan=lifespan)
 app.include_router(auth_router)
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000", "http://127.0.0.1:3000"],
+    allow_origins=origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
