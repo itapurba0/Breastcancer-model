@@ -8,7 +8,7 @@ import tensorflow as tf
 from tensorflow.keras.preprocessing import image
 from sklearn.metrics import classification_report, confusion_matrix
 
-DATA_DIR = os.path.join(os.getcwd(), "new_data", "val")
+DATA_DIR = os.path.join(os.getcwd(), "final_data", "val")
 MODEL_PATH = os.path.join(os.getcwd(), "model_v3.keras")
 MODEL_PATH_FALLBACK = os.path.join(os.getcwd(), "model_best.h5")
 ALT_MODEL_PATH = os.path.join(os.getcwd(), "model_finetuned.keras")
@@ -43,19 +43,10 @@ def evaluate():
         return os.path.exists(p) and os.path.getsize(p) > 100
     if good(MODEL_PATH):
         chosen = MODEL_PATH
-    elif good(MODEL_PATH_FALLBACK):
-        chosen = MODEL_PATH_FALLBACK
-    elif good(ALT_MODEL_PATH):
-        chosen = ALT_MODEL_PATH
-    elif good(ALT_MODEL_PATH_FALLBACK):
-        chosen = ALT_MODEL_PATH_FALLBACK
     else:
         raise FileNotFoundError(
             "No valid model file found. Checked: \n"
             f"  {MODEL_PATH} ({os.path.exists(MODEL_PATH) and os.path.getsize(MODEL_PATH)} bytes)\n"
-            f"  {MODEL_PATH_FALLBACK} ({os.path.exists(MODEL_PATH_FALLBACK) and os.path.getsize(MODEL_PATH_FALLBACK)} bytes)\n"
-            f"  {ALT_MODEL_PATH} ({os.path.exists(ALT_MODEL_PATH) and os.path.getsize(ALT_MODEL_PATH)} bytes)\n"
-            f"  {ALT_MODEL_PATH_FALLBACK} ({os.path.exists(ALT_MODEL_PATH_FALLBACK) and os.path.getsize(ALT_MODEL_PATH_FALLBACK)} bytes)\n"
         )
     try:
         model = tf.keras.models.load_model(chosen)

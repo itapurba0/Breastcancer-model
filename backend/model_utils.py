@@ -47,9 +47,6 @@ CONFIDENCE_THRESHOLD = 0.60
 MODEL_CANDIDATES = [
     "model_v3.keras",
     "breast_classification_model.keras",
-    "model_best.keras",
-    "model_finetuned.keras",
-    "model_v2.keras",
 ]
 
 
