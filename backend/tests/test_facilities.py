@@ -20,7 +20,7 @@ from facilities import (
     SPECIALTY_MAP,
     load_facilities,
 )
-import api as backend_api
+import backend.app as backend_api
 
 
 FACILITIES_JSON_PATH = os.path.join(os.path.dirname(__file__), "..", "facilities.json")
