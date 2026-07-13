@@ -19,6 +19,8 @@ interface ResultPanelProps {
     confidence_score: number;
   };
   onExportReport: () => void;
+  onGenerateGradcam?: () => void;
+  isGradcamLoading?: boolean;
 }
 
 const ResultPanel = ({
@@ -29,6 +31,8 @@ const ResultPanel = ({
   gradcam,
   triage,
   onExportReport,
+  onGenerateGradcam,
+  isGradcamLoading,
 }: ResultPanelProps) => {
   const isFailed = prediction.toLowerCase().includes("fail");
   const isInconclusive = inconclusive ?? false;
@@ -55,6 +59,8 @@ const ResultPanel = ({
         <ImageComparison
           selectedImage={selectedImage}
           gradcam={gradcam}
+          onGenerateGradcam={onGenerateGradcam}
+          isGradcamLoading={isGradcamLoading}
         />
       </div>
 

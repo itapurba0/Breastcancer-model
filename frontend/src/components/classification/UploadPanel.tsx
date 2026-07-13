@@ -132,7 +132,7 @@ const UploadPanel = ({
             className="rounded-2xl p-6 border border-primary/10 bg-white"
           >
             <div className="space-y-3">
-              {["Receiving image", "Processing neural layers", "Generating heatmap", "Compiling results"].map((step, i) => (
+              {["Receiving image", "Analyzing with neural network", "Compiling results"].map((step, i) => (
                 <div key={step} className="flex items-center gap-3">
                   <div className={cn(
                     "flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-xs font-bold",

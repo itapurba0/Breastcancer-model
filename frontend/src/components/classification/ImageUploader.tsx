@@ -39,6 +39,8 @@ const ImageUploader = () => {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [analysisStep, setAnalysisStep] = useState(-1);
   const [result, setResult] = useState<ClassificationResult | null>(null);
+  const [generatedGradcam, setGeneratedGradcam] = useState<string | undefined>(undefined);
+  const [gradcamLoading, setGradcamLoading] = useState(false);
 
   const [reportStep, setReportStep] = useState<"hidden" | "form" | "preview">("hidden");
   const [patientData, setPatientData] = useState<PatientDetails>({
@@ -85,6 +87,7 @@ const ImageUploader = () => {
     setSelectedImage(null);
     setSelectedFile(null);
     setResult(null);
+    setGeneratedGradcam(undefined);
     setReportStep("hidden");
   };
 
@@ -97,19 +100,16 @@ const ImageUploader = () => {
 
     setIsAnalyzing(true);
     setResult(null);
+    setGeneratedGradcam(undefined);
     setReportStep("hidden");
+    setAnalysisStep(0);
 
     try {
-      const steps = [0, 1, 2, 3];
-      for (const step of steps) {
-        await new Promise(r => setTimeout(r, 600));
-        setAnalysisStep(step);
-      }
-
       const formData = new FormData();
       formData.append("file", selectedFile, selectedFile.name);
 
       const res = await classifierApi("/predict", { method: "POST", body: formData });
+      setAnalysisStep(3);
 
       if (!res.ok) {
         const text = await res.text();
@@ -127,7 +127,6 @@ const ImageUploader = () => {
         prediction: json.predicted ?? json.prediction ?? json.label ?? "Unknown",
         confidence: normalizedConfidence,
         details: json.details ?? JSON.stringify(json),
-        gradcam: json.gradcam_image,
         inconclusive: json.inconclusive ?? false,
         triage: json.triage,
       });
@@ -136,6 +135,23 @@ const ImageUploader = () => {
     } finally {
       setIsAnalyzing(false);
       setAnalysisStep(-1);
+    }
+  };
+
+  const handleGenerateGradcam = async () => {
+    if (!selectedFile || gradcamLoading) return;
+    setGradcamLoading(true);
+    try {
+      const formData = new FormData();
+      formData.append("file", selectedFile, selectedFile.name);
+      const res = await classifierApi("/gradcam", { method: "POST", body: formData });
+      if (!res.ok) throw new Error("Grad-CAM failed");
+      const json = await res.json();
+      setGeneratedGradcam(json.gradcam_image);
+    } catch {
+      setGeneratedGradcam(undefined);
+    } finally {
+      setGradcamLoading(false);
     }
   };
 
@@ -193,9 +209,11 @@ const ImageUploader = () => {
                 prediction={result.prediction}
                 confidence={result.confidence}
                 inconclusive={result.inconclusive}
-                gradcam={result.gradcam}
+                gradcam={generatedGradcam}
                 triage={result.triage}
                 onExportReport={() => setReportStep("form")}
+                onGenerateGradcam={handleGenerateGradcam}
+                isGradcamLoading={gradcamLoading}
               />
             ) : (
               <AnimatePresence>
@@ -312,8 +330,8 @@ const ImageUploader = () => {
                         <div className="space-y-2">
                           <p className="text-xs font-bold text-muted-foreground font-mono border-b border-brand/10 pb-2">Grad-CAM heatmap</p>
                           <div className="bg-black/5 rounded-xl p-2 border border-brand/10 report-image-wrap flex items-center justify-center overflow-hidden">
-                            {result.gradcam ? (
-                              <img src={result.gradcam} alt="Heatmap" className="w-full max-h-full object-contain rounded-lg mix-blend-multiply" />
+                            {generatedGradcam ? (
+                              <img src={generatedGradcam} alt="Heatmap" className="w-full max-h-full object-contain rounded-lg mix-blend-multiply" />
                             ) : (
                               <p className="text-xs text-muted-foreground">No Heatmap Available</p>
                             )}
