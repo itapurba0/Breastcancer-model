@@ -9,7 +9,7 @@ import { Label } from "@/components/ui/label";
 import UploadPanel from "./UploadPanel";
 import ResultPanel from "./ResultPanel";
 import HowItWorks from "./HowItWorks";
-import { classifierApi } from "@/lib/api";
+import { classifierApi, gradcamApi } from "@/lib/api";
 
 interface ClassificationResult {
   prediction: string;
@@ -144,7 +144,7 @@ const ImageUploader = () => {
     try {
       const formData = new FormData();
       formData.append("file", selectedFile, selectedFile.name);
-      const res = await classifierApi("/gradcam", { method: "POST", body: formData });
+      const res = await gradcamApi("/gradcam", { method: "POST", body: formData });
       if (!res.ok) throw new Error("Grad-CAM failed");
       const json = await res.json();
       setGeneratedGradcam(json.gradcam_image);
