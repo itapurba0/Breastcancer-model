@@ -1,7 +1,9 @@
 tensorflow
 numpy
+opencv-python
 scikit-learn
 Pillow
+keras
 python-multipart
 fastapi
 uvicorn
@@ -21,7 +23,8 @@ pymongo
 pyjwt
 requests
 bcrypt
+sentence-transformers
 pandas
 tqdm
-
+seaborn
 albumentations
