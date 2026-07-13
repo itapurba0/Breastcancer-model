@@ -9,7 +9,7 @@ import { Label } from "@/components/ui/label";
 import UploadPanel from "./UploadPanel";
 import ResultPanel from "./ResultPanel";
 import HowItWorks from "./HowItWorks";
-import { api } from "@/lib/api";
+import { classifierApi } from "@/lib/api";
 
 interface ClassificationResult {
   prediction: string;
@@ -109,7 +109,7 @@ const ImageUploader = () => {
       const formData = new FormData();
       formData.append("file", selectedFile, selectedFile.name);
 
-      const res = await api("/predict", { method: "POST", body: formData });
+      const res = await classifierApi("/predict", { method: "POST", body: formData });
 
       if (!res.ok) {
         const text = await res.text();
