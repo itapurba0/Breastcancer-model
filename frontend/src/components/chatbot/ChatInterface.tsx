@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from "react";
+import { flushSync } from "react-dom";
 import { Send, Bot, User, Loader2, ChevronDown, LogOut, BookOpen } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -141,14 +142,29 @@ const ChatInterface = () => {
   const [inputValue, setInputValue] = useState("");
   const [isTyping, setIsTyping] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const isNearBottomRef = useRef(true);
 
   const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    const el = messagesEndRef.current?.parentElement;
+    if (el && isNearBottomRef.current) {
+      el.scrollTop = el.scrollHeight;
+    }
   };
 
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
+
+  useEffect(() => {
+    const el = messagesEndRef.current?.parentElement;
+    if (!el) return;
+    const onScroll = () => {
+      const threshold = 100;
+      isNearBottomRef.current = el.scrollHeight - el.scrollTop - el.clientHeight < threshold;
+    };
+    el.addEventListener("scroll", onScroll);
+    return () => el.removeEventListener("scroll", onScroll);
+  }, []);
 
   const handleSendMessage = async (content: string = inputValue) => {
     if (!content.trim()) return;
@@ -217,16 +233,20 @@ const ChatInterface = () => {
 
         if (value) {
           const chunk = decoder.decode(value, { stream: true });
-          streamedText += chunk;
+          const words = chunk.match(/\S+\s*/g) || [chunk];
 
-          setMessages((prev) => {
-            const updated = prev.map((msg) =>
-              msg.id === assistantMessageId
-                ? { ...msg, content: streamedText }
-                : msg
-            ).slice(-MAX_MESSAGES);
-            return updated;
-          });
+          for (const word of words) {
+            streamedText += word;
+            flushSync(() => {
+              setMessages((prev) =>
+                prev.map((msg) =>
+                  msg.id === assistantMessageId
+                    ? { ...msg, content: streamedText }
+                    : msg
+                ).slice(-MAX_MESSAGES)
+              );
+            });
+          }
         }
       }
 
