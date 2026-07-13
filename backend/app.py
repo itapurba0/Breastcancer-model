@@ -39,10 +39,10 @@ origins = [
     "http://127.0.0.1:3000",
 ]
 
-VERCEL_URL = os.getenv("VERCEL_URL")
+CLIENT_URL = os.getenv("CLIENT_URL")
 
-if VERCEL_URL:
-    origins.append(f"https://{VERCEL_URL}")
+if CLIENT_URL:
+    origins.append(f"https://{CLIENT_URL}")
 app = FastAPI(title="Backend Classifier API", lifespan=lifespan)
 app.include_router(auth_router)
 app.add_middleware(

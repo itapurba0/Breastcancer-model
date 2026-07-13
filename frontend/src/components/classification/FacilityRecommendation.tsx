@@ -7,6 +7,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
+import { api } from "@/lib/api";
 
 interface Facility {
   id: string;
@@ -57,7 +58,7 @@ const FacilityRecommendation = ({ prediction, confidence, inconclusive }: Facili
     setSource(null);
 
     try {
-      const res = await fetch("/facilities/recommend", {
+      const res = await api("/facilities/recommend", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -92,7 +93,7 @@ const FacilityRecommendation = ({ prediction, confidence, inconclusive }: Facili
       const predLabel = inconclusive ? "diagnostic imaging center" : prediction === "malignant" ? "cancer hospital" : "radiology center";
       const query = city ? `${predLabel} in ${city}` : `${predLabel} near me`;
 
-      const res = await fetch("/facilities/search", {
+      const res = await api("/facilities/search", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ query, lat, lng, radius: 20000 }),

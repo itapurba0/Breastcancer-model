@@ -6,6 +6,7 @@ import { motion } from "framer-motion";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { useAuth } from "@/contexts/AuthContext";
+import { api } from "@/lib/api";
 
 interface Source {
   id: number;
@@ -105,7 +106,7 @@ const ChatInterface = () => {
       setChatLoading(false);
       return;
     }
-    fetch("/chat/history", {
+    api("/chat/history", {
       headers: { Authorization: `Bearer ${token}` },
     })
       .then((r) => r.json())
@@ -127,7 +128,7 @@ const ChatInterface = () => {
 
   const saveMessages = (msgs: Message[]) => {
     if (!token) return;
-    fetch("/chat/save", {
+    api("/chat/save", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -174,7 +175,7 @@ const ChatInterface = () => {
         content: msg.content,
       }));
 
-      const response = await fetch("/chat", {
+      const response = await api("/chat", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

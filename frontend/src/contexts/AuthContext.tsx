@@ -1,4 +1,5 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from "react";
+import { api } from "@/lib/api";
 
 interface AuthContextType {
   user: string | null;
@@ -22,7 +23,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     const saved = sessionStorage.getItem(TOKEN_KEY);
     if (saved) {
-      fetch("/auth/me", {
+      api("/auth/me", {
         headers: { Authorization: `Bearer ${saved}` },
       })
         .then((r) => {
@@ -43,7 +44,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const login = async (email: string, password: string) => {
-    const res = await fetch("/auth/login", {
+    const res = await api("/auth/login", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ email, password }),
@@ -59,7 +60,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const signup = async (email: string, password: string) => {
-    const res = await fetch("/auth/signup", {
+    const res = await api("/auth/signup", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ email, password }),
