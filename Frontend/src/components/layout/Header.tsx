@@ -26,7 +26,7 @@ const Header = () => {
             <ShieldCheck className="h-5 w-5 text-brand stroke-[2px]" />
           </div>
           <span className="text-base font-bold text-foreground font-heading tracking-tight">
-            Classifier<span className="text-brand">AI</span>
+            Breast Cancer<span className="text-brand"> Companion</span>
           </span>
         </Link>
 

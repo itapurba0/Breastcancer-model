@@ -3,21 +3,21 @@ import App from "./App.tsx";
 import "./index.css";
 
 window.addEventListener("error", (event) => {
-  console.error("ClassifierAI Global Error Caught:", event.error || event.message);
+  console.error("Breast Cancer Companion Global Error Caught:", event.error || event.message);
 });
 
 window.addEventListener("unhandledrejection", (event) => {
-  console.error("ClassifierAI Global Unhandled Promise Rejection:", event.reason);
+  console.error("Breast Cancer Companion Global Unhandled Promise Rejection:", event.reason);
 });
 
 try {
   const container = document.getElementById("root");
   if (!container) {
-    console.error("ClassifierAI Boot Error: Root container element '#root' not found in DOM!");
+    console.error("Breast Cancer Companion Boot Error: Root container element '#root' not found in DOM!");
   } else {
     const root = createRoot(container);
     root.render(<App />);
   }
 } catch (error) {
-  console.error("ClassifierAI Sync Render Boot Crash:", error);
+  console.error("Breast Cancer Companion Sync Render Boot Crash:", error);
 }
