@@ -1,8 +1,6 @@
 tensorflow
 numpy
-opencv-python
 scikit-learn
-matplotlib
 Pillow
 keras
 python-multipart
@@ -16,7 +14,6 @@ httpx
 opencv-python-headless
 beautifulsoup4
 fastembed
-ollama
 pypdf
 openai
 qdrant-client
