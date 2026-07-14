@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect } from "react";
 
 export function useSessionState<T>(key: string, defaultValue: T): [T, React.Dispatch<React.SetStateAction<T>>] {
   const [state, setState] = useState<T>(() => {
@@ -22,18 +22,13 @@ export function useSessionState<T>(key: string, defaultValue: T): [T, React.Disp
     }
   }, [key, state]);
 
-  const clearState = useCallback(() => {
-    try {
-      sessionStorage.removeItem(key);
-    } catch {}
-    setState(defaultValue);
-  }, [key, defaultValue]);
-
   return [state, setState];
 }
 
 export function clearSessionKey(key: string) {
   try {
     sessionStorage.removeItem(key);
-  } catch {}
+  } catch {
+    // storage full or unavailable — silently degrade
+  }
 }
