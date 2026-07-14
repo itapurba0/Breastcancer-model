@@ -41,6 +41,16 @@ const facilityTypeConfig: Record<string, { label: string; bg: string; text: stri
   hospital: { label: "Hospital", bg: "bg-emerald-50", text: "text-emerald-700", border: "border-emerald-200" },
 };
 
+const CANCER_RE = /cancer|oncology|tumou?r|chemotherapy|radiation|surgical|onco/i;
+const MAMMOGRAM_RE = /mammogra|breast|scan|imaging|radiology|sonography|ultrasound|diagnostic|screening/i;
+
+function isRelevantFacility(f: Facility): boolean {
+  if (f.type === "cancer_center") return true;
+  if (f.type === "hospital" && CANCER_RE.test(f.name)) return true;
+  if (f.type === "diagnostic_center" && MAMMOGRAM_RE.test(f.name)) return true;
+  return false;
+}
+
 const linkClasses = "inline-flex items-center gap-1.5 text-xs font-semibold text-primary hover:text-primary/80 transition-colors duration-200 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 focus-visible:ring-offset-2 rounded-sm";
 
 const FacilityRecommendation = ({ prediction, confidence, inconclusive }: FacilityRecommendationProps) => {
@@ -51,13 +61,14 @@ const FacilityRecommendation = ({ prediction, confidence, inconclusive }: Facili
   const [error, setError] = useState<string | null>(null);
   const [showResults, setShowResults] = useState(false);
   const [isDetectingLocation, setIsDetectingLocation] = useState(false);
-  const [showGoogleFallback, setShowGoogleFallback] = useState(false);
 
-  const fetchRecommendations = useCallback(async (lat?: number, lng?: number, searchCity?: string) => {
-    setIsLoading(true);
-    setError(null);
-    setSource(null);
+  const searchQuery = useCallback(() => {
+    if (inconclusive) return "diagnostic centre mammography breast imaging";
+    if (prediction === "malignant") return "cancer hospital oncology centre";
+    return "diagnostic centre mammography breast screening";
+  }, [prediction, inconclusive]);
 
+  const fetchCuratedFallback = useCallback(async (lat?: number, lng?: number, searchCity?: string) => {
     try {
       const res = await classifierApi("/facilities/recommend", {
         method: "POST",
@@ -66,61 +77,68 @@ const FacilityRecommendation = ({ prediction, confidence, inconclusive }: Facili
           prediction,
           confidence,
           inconclusive,
-          city: searchCity || city || undefined,
+          city: searchCity || undefined,
           lat,
           lng,
-          limit: 5,
+          limit: 15,
         }),
       });
-
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-
+      if (!res.ok) return false;
       const data = await res.json();
-      setFacilities(data.recommendations || []);
-      setSource(data.source || "curated");
+      const results = data.recommendations || [];
+      if (results.length === 0) {
+        setError("No facilities found in this area.");
+        return false;
+      }
+      setFacilities(results);
+      setSource("curated");
       setShowResults(true);
+      return true;
     } catch {
-      setError("Failed to fetch facility recommendations. Please try again.");
-    } finally {
-      setIsLoading(false);
+      setError("Unable to fetch facility information. Please try again.");
+      return false;
     }
-  }, [prediction, confidence, inconclusive, city]);
+  }, [prediction, confidence, inconclusive]);
 
-  const fetchGoogleResults = useCallback(async (lat?: number, lng?: number, searchAll?: boolean) => {
+  const fetchFromGoogle = useCallback(async (lat?: number, lng?: number, searchCity?: string) => {
     setIsLoading(true);
     setError(null);
 
     try {
-      const predLabel = inconclusive ? "diagnostic imaging center" : prediction === "malignant" ? "cancer hospital" : "radiology center";
-      const query = city ? `${predLabel} in ${city}` : `${predLabel} near me`;
+      const baseQuery = searchQuery();
+      const query = searchCity ? `${baseQuery} in ${searchCity}` : baseQuery;
 
       const res = await classifierApi("/facilities/search", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ query, lat, lng, radius: 20000, search_all: searchAll }),
+        body: JSON.stringify({ query, lat, lng, radius: 20000 }),
       });
 
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
 
       const data = await res.json();
-      if (data.source === "unavailable") {
-        setError("Google Places API is not configured. Please enter your city to use our curated database.");
-        setShowGoogleFallback(false);
-        return;
+      if (data.source === "unavailable") throw new Error("Google Places API not configured");
+
+      let results = data.recommendations || [];
+      results = results.filter(isRelevantFacility);
+
+      if (results.length === 0) {
+        return await fetchCuratedFallback(lat, lng, searchCity);
       }
-      setFacilities(data.recommendations || []);
+
+      setFacilities(results);
       setSource("google");
       setShowResults(true);
     } catch {
-      setError("Google Places search failed. Please try the curated database instead.");
+      await fetchCuratedFallback(lat, lng, searchCity);
     } finally {
       setIsLoading(false);
     }
-  }, [prediction, inconclusive, city]);
+  }, [searchQuery, fetchCuratedFallback]);
 
   const handleCitySearch = () => {
     if (city.trim()) {
-      fetchRecommendations(undefined, undefined, city.trim());
+      fetchFromGoogle(undefined, undefined, city.trim());
     }
   };
 
@@ -136,32 +154,17 @@ const FacilityRecommendation = ({ prediction, confidence, inconclusive }: Facili
     navigator.geolocation.getCurrentPosition(
       (position) => {
         setIsDetectingLocation(false);
-        fetchRecommendations(position.coords.latitude, position.coords.longitude);
+        fetchFromGoogle(position.coords.latitude, position.coords.longitude, city.trim() || undefined);
       },
       () => {
         setIsDetectingLocation(false);
-        setError("Location access denied. Please enter your city manually.");
+        if (city.trim()) {
+          fetchFromGoogle(undefined, undefined, city.trim());
+        } else {
+          setError("Location access denied. Please enter your city manually.");
+        }
       },
       { enableHighAccuracy: false, timeout: 10000 }
-    );
-  };
-
-  const handleGoogleSearch = (searchAll = true) => {
-    if (!navigator.geolocation) {
-      fetchGoogleResults(undefined, undefined, searchAll);
-      return;
-    }
-    setIsDetectingLocation(true);
-    navigator.geolocation.getCurrentPosition(
-      (position) => {
-        setIsDetectingLocation(false);
-        fetchGoogleResults(position.coords.latitude, position.coords.longitude, searchAll);
-      },
-      () => {
-        setIsDetectingLocation(false);
-        fetchGoogleResults(undefined, undefined, searchAll);
-      },
-      { enableHighAccuracy: false, timeout: 5000 }
     );
   };
 
@@ -246,7 +249,7 @@ const FacilityRecommendation = ({ prediction, confidence, inconclusive }: Facili
               <div className="flex items-center gap-2">
                 <Hospital className="h-4 w-4 text-primary" />
                 <h4 className="text-sm font-bold text-foreground font-sans">
-                  Recommended facilities
+                  {source === "curated" ? "Recommended facilities" : "Nearby facilities"}
                 </h4>
                 {facilities.length > 0 && (
                   <span className="text-xs text-muted-foreground font-mono bg-muted px-2 py-0.5 rounded-full tabular-nums">
@@ -255,9 +258,9 @@ const FacilityRecommendation = ({ prediction, confidence, inconclusive }: Facili
                 )}
               </div>
               <div className="flex items-center gap-2">
-                {source === "google" && (
+                {source === "curated" && (
                   <span className="text-xs text-muted-foreground font-sans bg-muted px-2 py-0.5 rounded-full">
-                    Powered by Google
+                    Database
                   </span>
                 )}
                 <Button
@@ -351,23 +354,6 @@ const FacilityRecommendation = ({ prediction, confidence, inconclusive }: Facili
                   );
                 })}
               </div>
-            )}
-
-            {/* Google Fallback Button */}
-            {!showGoogleFallback && source === "curated" && (
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => {
-                  setShowGoogleFallback(true);
-                  handleGoogleSearch();
-                }}
-                disabled={isLoading}
-                className="w-full h-9 text-xs rounded-full text-muted-foreground hover:text-primary cursor-pointer"
-              >
-                {isLoading ? <Loader2 className="h-3 w-3 animate-spin mr-2" /> : null}
-                Search more facilities via Google
-              </Button>
             )}
           </motion.div>
         )}

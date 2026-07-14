@@ -1,4 +1,5 @@
 import os
+import re
 import json
 import math
 from typing import Dict, List, Optional
@@ -69,6 +70,41 @@ def haversine_distance(lat1: float, lng1: float, lat2: float, lng2: float) -> fl
     return R * 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a))
 
 
+MEDICAL_KEYWORDS = re.compile(
+    r"cancer|mammography|mammogram|breast|tumor|tumour|oncology|"
+    r"radiology|diagnostic|imaging|hospital|clinic|scan|mri|ct|sonography|"
+    r"ultrasound|biopsy|screening|pathology|laboratory|lab|treatment|"
+    r"chemotherapy|radiation|surgery|oncologist|radiologist|gynecology|"
+    r"healthcare|medical|health|care|center|centre|specialist|doctor|physician",
+    re.IGNORECASE,
+)
+
+
+def _enhance_query(query: str) -> str:
+    if MEDICAL_KEYWORDS.search(query):
+        return query
+    return f"best breast cancer hospital diagnostic center mammography {query}"
+
+
+PLACE_TYPE_KEYWORDS: list[tuple[str, list[str]]] = [
+    ("cancer_center", ["cancer", "oncology", "tumour", "tumor", "cancer centre", "cancer center"]),
+    ("diagnostic_center", [
+        "diagnostic", "imaging", "radiology", "scan centre", "scan center",
+        "mri", "ct scan", "ct-scan", "lab", "pathology", "sonography",
+        "ultrasound", "x-ray", "mammography",
+    ]),
+]
+
+
+def _classify_place_type(name: str) -> str:
+    name_lower = name.lower()
+    for ptype, keywords in PLACE_TYPE_KEYWORDS:
+        for kw in keywords:
+            if kw in name_lower:
+                return ptype
+    return "hospital"
+
+
 SPECIALTY_MAP = {
     "malignant": ["breast_cancer", "oncology", "surgery"],
     "benign": ["radiology", "diagnostics", "breast_cancer_screening"],
@@ -92,6 +128,7 @@ class FacilitySearchRequest(BaseModel):
     lat: Optional[float] = None
     lng: Optional[float] = None
     radius: int = 20000
+    search_all: bool = False
 
 
 def recommend_facilities(body: FacilityRecommendRequest) -> dict:
@@ -169,15 +206,17 @@ async def search_facilities(body: FacilitySearchRequest) -> dict:
         return {"recommendations": [], "source": "unavailable", "error": "Google Places API key not configured"}
 
     try:
+        query = body.query if body.search_all else _enhance_query(body.query)
+
         headers = {
             "X-Goog-Api-Key": api_key,
-            "X-Goog-FieldMask": "places.id,places.displayName,places.formattedAddress,places.rating,places.userRatingCount,places.regularOpeningHours",
+            "X-Goog-FieldMask": "places.id,places.displayName,places.formattedAddress,places.rating,places.userRatingCount,places.regularOpeningHours,places.location",
             "Content-Type": "application/json",
         }
 
         payload = {
-            "textQuery": body.query,
-            "maxResultCount": 5,
+            "textQuery": query,
+            "maxResultCount": 15,
         }
 
         if body.lat is not None and body.lng is not None:
@@ -197,19 +236,35 @@ async def search_facilities(body: FacilitySearchRequest) -> dict:
         resp.raise_for_status()
         data = resp.json()
 
+        has_coords = body.lat is not None and body.lng is not None
         results = []
-        for place in data.get("places", [])[:5]:
+        for place in data.get("places", [])[:15]:
             name = place.get("displayName", {}).get("text", "") if isinstance(place.get("displayName"), dict) else place.get("displayName", "")
+
+            location = None
+            loc_data = place.get("location")
+            if isinstance(loc_data, dict) and "latitude" in loc_data and "longitude" in loc_data:
+                location = {"lat": loc_data["latitude"], "lng": loc_data["longitude"]}
+
+            distance_km = None
+            if has_coords and location is not None:
+                distance_km = round(haversine_distance(body.lat, body.lng, location["lat"], location["lng"]), 1)
+
             results.append({
                 "id": place.get("id", ""),
                 "name": name,
-                "type": "hospital",
+                "type": _classify_place_type(name),
                 "address": place.get("formattedAddress", ""),
+                "location": location,
+                "distance_km": distance_km,
                 "rating": place.get("rating"),
                 "total_ratings": place.get("userRatingCount"),
                 "open_now": place.get("regularOpeningHours", {}).get("openNow") if isinstance(place.get("regularOpeningHours"), dict) else None,
                 "relevance_reason": f"Google Places result ({place.get('rating', 'N/A')} stars)",
             })
+
+        if has_coords:
+            results.sort(key=lambda r: r["distance_km"] if r["distance_km"] is not None else float("inf"))
 
         return {"recommendations": results, "source": "google"}
 

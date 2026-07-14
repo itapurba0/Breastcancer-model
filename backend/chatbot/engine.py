@@ -125,7 +125,7 @@ async def generate_rag_response(messages):
         # 4. NEW: Add 'await' so Python knows it can handle other users while OpenRouter thinks
         # Request the stream with strict consistency parameters
         stream = await ai_client.chat.completions.create(
-            model="openai/gpt-oss-120b:free", # 1. Force a specific model instead of openrouter/free
+            model="nvidia/nemotron-3-super-120b-a12b:free", # 1. Force a specific model instead of openrouter/free
             messages=ai_memory,
             temperature=0.3, # 2. NEW: Drops randomness to absolute zero
             stream=True

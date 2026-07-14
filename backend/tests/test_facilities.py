@@ -15,6 +15,8 @@ from facilities import (
     haversine_distance,
     recommend_facilities,
     search_facilities,
+    _enhance_query,
+    _classify_place_type,
     FacilityRecommendRequest,
     FacilitySearchRequest,
     SPECIALTY_MAP,
@@ -79,6 +81,50 @@ class TestHaversineDistance:
         d1 = haversine_distance(19.0047, 72.8534, 28.5672, 77.2100)
         d2 = haversine_distance(28.5672, 77.2100, 19.0047, 72.8534)
         assert abs(d1 - d2) < 0.01
+
+
+# --- _enhance_query tests ---
+
+class TestEnhanceQuery:
+    def test_non_medical_query_gets_enhanced(self):
+        result = _enhance_query("delhi")
+        assert result.startswith("best breast cancer hospital diagnostic center mammography")
+        assert "delhi" in result
+
+    def test_medical_query_passes_through(self):
+        result = _enhance_query("cancer hospital in mumbai")
+        assert result == "cancer hospital in mumbai"
+
+    def test_partial_medical_query_passes_through(self):
+        result = _enhance_query("breast clinic near me")
+        assert result == "breast clinic near me"
+
+    def test_empty_query(self):
+        result = _enhance_query("")
+        assert result.startswith("best breast cancer hospital")
+
+
+# --- _classify_place_type tests ---
+
+class TestClassifyPlaceType:
+    def test_cancer_center(self):
+        assert _classify_place_type("Tata Memorial Cancer Centre") == "cancer_center"
+        assert _classify_place_type("City Oncology Institute") == "cancer_center"
+        assert _classify_place_type("Tumor Board Specialists") == "cancer_center"
+
+    def test_diagnostic_center(self):
+        assert _classify_place_type("Apollo Diagnostic Centre") == "diagnostic_center"
+        assert _classify_place_type("City Imaging and Radiology") == "diagnostic_center"
+        assert _classify_place_type("MediLab Pathology") == "diagnostic_center"
+        assert _classify_place_type("MRI Scan Centre") == "diagnostic_center"
+
+    def test_general_hospital(self):
+        assert _classify_place_type("City General Hospital") == "hospital"
+        assert _classify_place_type("Primary Health Centre") == "hospital"
+
+    def test_case_insensitive(self):
+        assert _classify_place_type("TATA MEMORIAL CANCER CENTRE") == "cancer_center"
+        assert _classify_place_type("apollo DIAGNOSTIC centre") == "diagnostic_center"
 
 
 # --- recommend_facilities tests ---
@@ -173,6 +219,7 @@ class TestSearchFacilities:
                     "id": "place1",
                     "displayName": {"text": "Tata Memorial Hospital"},
                     "formattedAddress": "Dr. E Borges Road, Mumbai",
+                    "location": {"latitude": 19.0047, "longitude": 72.8534},
                     "rating": 4.5,
                     "userRatingCount": 1200,
                     "regularOpeningHours": {"openNow": True},
@@ -181,6 +228,7 @@ class TestSearchFacilities:
                     "id": "place2",
                     "displayName": {"text": "BARC Hospital"},
                     "formattedAddress": "Anushaktinagar, Mumbai",
+                    "location": {"latitude": 19.0147, "longitude": 72.8934},
                     "rating": 4.2,
                     "userRatingCount": 800,
                     "regularOpeningHours": None,
@@ -197,6 +245,8 @@ class TestSearchFacilities:
         assert result["recommendations"][0]["name"] == "Tata Memorial Hospital"
         assert result["recommendations"][0]["rating"] == 4.5
         assert result["recommendations"][0]["open_now"] is True
+        assert result["recommendations"][0]["type"] == "hospital"
+        assert result["recommendations"][1]["type"] == "hospital"
 
     @patch("facilities.requests.post")
     def test_search_with_location_bias(self, mock_post):
@@ -214,6 +264,66 @@ class TestSearchFacilities:
         assert "locationBias" in payload
         assert payload["locationBias"]["circle"]["center"]["latitude"] == 19.0
         assert payload["locationBias"]["circle"]["center"]["longitude"] == 72.8
+
+    @patch("facilities.requests.post")
+    def test_search_all_bypasses_enhancement(self, mock_post):
+        mock_response = MagicMock()
+        mock_response.json.return_value = {"places": []}
+        mock_response.raise_for_status.return_value = None
+        mock_post.return_value = mock_response
+
+        body = self._make_request(query="pizza", search_all=True)
+        result = asyncio_run(search_facilities(body))
+        assert result["source"] == "google"
+
+        call_kwargs = mock_post.call_args[1]
+        payload = call_kwargs["json"]
+        assert payload["textQuery"] == "pizza"
+
+    @patch("facilities.requests.post")
+    def test_default_search_all_false_enhances_query(self, mock_post):
+        mock_response = MagicMock()
+        mock_response.json.return_value = {"places": []}
+        mock_response.raise_for_status.return_value = None
+        mock_post.return_value = mock_response
+
+        body = self._make_request(query="delhi", search_all=False)
+        result = asyncio_run(search_facilities(body))
+        assert result["source"] == "google"
+
+        call_kwargs = mock_post.call_args[1]
+        payload = call_kwargs["json"]
+        assert "best breast cancer hospital" in payload["textQuery"]
+        assert "delhi" in payload["textQuery"]
+
+    @patch("facilities.requests.post")
+    def test_distance_sorted_with_coords(self, mock_post):
+        mock_response = MagicMock()
+        mock_response.json.return_value = {
+            "places": [
+                {
+                    "id": "far",
+                    "displayName": {"text": "Far Hospital"},
+                    "formattedAddress": "Far Away",
+                    "location": {"latitude": 28.5672, "longitude": 77.2100},
+                },
+                {
+                    "id": "near",
+                    "displayName": {"text": "Near Clinic"},
+                    "formattedAddress": "Near Here",
+                    "location": {"latitude": 19.0147, "longitude": 72.8934},
+                },
+            ]
+        }
+        mock_response.raise_for_status.return_value = None
+        mock_post.return_value = mock_response
+
+        body = self._make_request(query="hospital", lat=19.0, lng=72.8)
+        result = asyncio_run(search_facilities(body))
+        assert result["recommendations"][0]["id"] == "near"
+        assert result["recommendations"][1]["id"] == "far"
+        assert result["recommendations"][0]["distance_km"] is not None
+        assert result["recommendations"][0]["location"] is not None
 
     @patch("facilities.requests.post")
     def test_unexpected_status(self, mock_post):
@@ -291,8 +401,9 @@ class TestFacilitiesAPI:
         mock_response.json.return_value = {
             "places": [{
                 "id": "p1",
-                "displayName": {"text": "Test Hospital"},
+                "displayName": {"text": "Tata Memorial Cancer Centre"},
                 "formattedAddress": "Test Address",
+                "location": {"latitude": 19.0, "longitude": 72.8},
             }]
         }
         mock_response.raise_for_status.return_value = None
@@ -304,6 +415,8 @@ class TestFacilitiesAPI:
         assert resp.status_code == 200
         data = resp.json()
         assert data["source"] == "google"
+        assert data["recommendations"][0]["type"] == "cancer_center"
+        assert data["recommendations"][0]["location"] is not None
 
     def test_search_endpoint_missing_key(self):
         with patch.dict(os.environ, {}, clear=True):
