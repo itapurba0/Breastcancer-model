@@ -1,4 +1,5 @@
 import { useState, useCallback } from "react";
+import { useSessionState } from "@/hooks/useSessionState";
 import {
   AlertCircle, FileOutput, Printer, User,
 } from "lucide-react";
@@ -33,17 +34,17 @@ interface PatientDetails {
 }
 
 const ImageUploader = () => {
-  const [selectedImage, setSelectedImage] = useState<string | null>(null);
+  const [selectedImage, setSelectedImage] = useSessionState<string | null>("cls_image", null);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [isDragging, setIsDragging] = useState(false);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [analysisStep, setAnalysisStep] = useState(-1);
-  const [result, setResult] = useState<ClassificationResult | null>(null);
-  const [generatedGradcam, setGeneratedGradcam] = useState<string | undefined>(undefined);
+  const [result, setResult] = useSessionState<ClassificationResult | null>("cls_result", null);
+  const [generatedGradcam, setGeneratedGradcam] = useSessionState<string | undefined>("cls_gradcam", undefined);
   const [gradcamLoading, setGradcamLoading] = useState(false);
 
-  const [reportStep, setReportStep] = useState<"hidden" | "form" | "preview">("hidden");
-  const [patientData, setPatientData] = useState<PatientDetails>({
+  const [reportStep, setReportStep] = useSessionState<"hidden" | "form" | "preview">("cls_report_step", "hidden");
+  const [patientData, setPatientData] = useSessionState<PatientDetails>("cls_patient", {
     patientName: "",
     patientAge: "",
     patientId: "",
