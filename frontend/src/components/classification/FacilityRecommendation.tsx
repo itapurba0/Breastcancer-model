@@ -25,6 +25,7 @@ interface Facility {
   rating?: number;
   total_ratings?: number;
   open_now?: boolean;
+  location?: { lat: number; lng: number };
 }
 
 interface FacilityRecommendationProps {
@@ -85,7 +86,7 @@ const FacilityRecommendation = ({ prediction, confidence, inconclusive }: Facili
     }
   }, [prediction, confidence, inconclusive, city]);
 
-  const fetchGoogleResults = useCallback(async (lat?: number, lng?: number) => {
+  const fetchGoogleResults = useCallback(async (lat?: number, lng?: number, searchAll?: boolean) => {
     setIsLoading(true);
     setError(null);
 
@@ -96,7 +97,7 @@ const FacilityRecommendation = ({ prediction, confidence, inconclusive }: Facili
       const res = await classifierApi("/facilities/search", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ query, lat, lng, radius: 20000 }),
+        body: JSON.stringify({ query, lat, lng, radius: 20000, search_all: searchAll }),
       });
 
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
@@ -145,20 +146,20 @@ const FacilityRecommendation = ({ prediction, confidence, inconclusive }: Facili
     );
   };
 
-  const handleGoogleSearch = () => {
+  const handleGoogleSearch = (searchAll = true) => {
     if (!navigator.geolocation) {
-      fetchGoogleResults();
+      fetchGoogleResults(undefined, undefined, searchAll);
       return;
     }
     setIsDetectingLocation(true);
     navigator.geolocation.getCurrentPosition(
       (position) => {
         setIsDetectingLocation(false);
-        fetchGoogleResults(position.coords.latitude, position.coords.longitude);
+        fetchGoogleResults(position.coords.latitude, position.coords.longitude, searchAll);
       },
       () => {
         setIsDetectingLocation(false);
-        fetchGoogleResults();
+        fetchGoogleResults(undefined, undefined, searchAll);
       },
       { enableHighAccuracy: false, timeout: 5000 }
     );
