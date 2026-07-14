@@ -109,8 +109,9 @@ const ImageUploader = () => {
       const formData = new FormData();
       formData.append("file", selectedFile, selectedFile.name);
 
+      setAnalysisStep(1);
       const res = await classifierApi("/predict", { method: "POST", body: formData });
-      setAnalysisStep(3);
+      setAnalysisStep(2);
 
       if (!res.ok) {
         const text = await res.text();
