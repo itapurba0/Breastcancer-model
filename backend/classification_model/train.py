@@ -51,8 +51,7 @@ def build_model():
     x = layers.Dense(256, activation="relu")(x)
     x = layers.Dropout(0.2)(x)
     outputs = layers.Dense(NUM_CLASSES, activation="softmax")(x)
-    model = Model(inputs=base.input, outputs=outputs)
-    return model
+    return Model(inputs=base.input, outputs=outputs)
 
 def main():
     train_ds, val_ds, class_names = get_datasets()
