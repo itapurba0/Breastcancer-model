@@ -56,7 +56,7 @@ const UploadPanel = ({
             </div>
             <div className="text-center space-y-2">
               <h2 className="text-lg sm:text-xl font-bold text-foreground font-heading tracking-tight">
-                Upload mammography image
+                Upload Ultrasound image
               </h2>
               <p className="text-sm sm:text-base text-muted-foreground font-sans max-w-sm font-semibold">
                 Drag and drop or click to browse
@@ -67,7 +67,7 @@ const UploadPanel = ({
               accept="image/*"
               onChange={onFileSelect}
               className="absolute inset-0 w-full h-full opacity-0 cursor-pointer min-h-[44px]"
-              aria-label="Upload mammography image"
+              aria-label="Upload Ultrasound image"
             />
             <div className="flex items-center gap-2 px-4 py-1.5 rounded-full bg-muted border border-brand/15 text-xs text-muted-foreground">
               <ImageIcon className="h-3.5 w-3.5 text-primary" />

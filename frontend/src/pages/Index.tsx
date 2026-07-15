@@ -35,7 +35,7 @@ const features = [
     icon: Microscope,
     title: "Image Analysis",
     description:
-      "Upload mammography or ultrasound images for instant AI-powered screening with explainable Grad-CAM visualizations.",
+      "Upload ultrasound images for instant AI-powered screening with explainable Grad-CAM visualizations.",
   },
   {
     icon: MessageCircle,

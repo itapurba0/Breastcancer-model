@@ -124,6 +124,29 @@ async def predict(file: UploadFile = File(...)):
     except Exception as e:
         raise HTTPException(status_code=503, detail=f"Model not loaded locally and proxy failed: {e}")
 
+@app.post("/gradcam")
+async def gradcam(file: UploadFile = File(...)):
+    if not file.content_type or file.content_type.split("/")[0] != "image":
+        raise HTTPException(status_code=400, detail="Uploaded file must be an image")
+
+    data = await file.read()
+
+    if model_utils.tf is None or MODEL is None:
+        raise HTTPException(status_code=503, detail="Model not available")
+
+    try:
+        x = model_utils.preprocess_image_bytes(data)
+        res = model_utils.predict_with_model(MODEL, x)
+        heatmap = model_utils.make_gradcam_heatmap(x, MODEL, res["pred_idx"])
+        if heatmap is None:
+            raise HTTPException(status_code=500, detail="GradCAM generation failed")
+        gradcam_b64 = model_utils.generate_gradcam_base64(data, heatmap)
+        return {"gradcam_image": f"data:image/jpeg;base64,{gradcam_b64}"}
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Grad-CAM failed: {e}")
+
 class MessageItem(BaseModel):
     role: str
     content: str
@@ -176,4 +199,4 @@ async def search_facilities_endpoint(body: FacilitySearchRequest):
 
 if __name__ == "__main__":
     print("Starting FastAPI Server...")
-    uvicorn.run("api:app", host="0.0.0.0", port=8000, loop="asyncio", reload=True)
+    uvicorn.run("app:app", host="0.0.0.0", port=8000, loop="asyncio", reload=True)
